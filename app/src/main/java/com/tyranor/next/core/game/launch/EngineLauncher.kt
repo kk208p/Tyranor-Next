@@ -138,7 +138,6 @@ object EngineLauncher {
         EngineType.UK2,
         EngineType.FVP,
         EngineType.ETHORNELL,
-        EngineType.RENPY,
         EngineType.RUFFLE,
         // YURIS / CatSystem2 / PC 由外置 Winlator 承载（GAL 分组），引擎页条目点击进入引擎专属弹窗
         EngineType.YURIS,
@@ -265,6 +264,10 @@ object EngineLauncher {
         if (AndroidAppGames.isAndroidApp(game)) {
             return launchAndroidApp(context, game)
         }
+        // Ren'Py 外置模块已从本分支移除：历史库记录仍可能触发启动，明确失败而不是落入内置链路
+        if (game.engine == EngineType.RENPY) {
+            return LaunchResult.Failure.StartFailed(null)
+        }
         // 外置模拟器跳转：PSP / Switch 为 ROM 文件型（不解析目录），
         // YURIS 为 Windows 游戏（目录 + 主 exe，经 Winlator 外置启动协议挂载目录）
         ExternalEmulatorRegistry.forEngine(game.engine)?.let { target ->
@@ -297,11 +300,7 @@ object EngineLauncher {
         // 三级设置（应用级 + 单游戏覆盖）一次性解析，后续 Intent 组装只消费生效值（P0-3）
         val settings = EngineSettingsResolver.resolve(context, game, path)
         defaultModule?.let { defaultModule ->
-            val module = ExternalEngineModuleRegistry.resolveModule(
-                game.engine,
-                if (game.engine == EngineType.RENPY) settings.renpyVersion else null,
-                detectedRenpyVersion = game.detectedRenpyVersion,
-            ) ?: defaultModule
+            val module = defaultModule
             // 先确认模块已安装，再走目录/权限门禁：否则未安装时会把用户先送去「所有文件访问」，
             // 真正的缺失原因（应安装模块）反而看不到。
             if (!ExternalEngineLauncher.isPackageInstalled(context, module)) {

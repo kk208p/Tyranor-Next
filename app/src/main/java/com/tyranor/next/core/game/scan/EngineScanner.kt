@@ -268,7 +268,7 @@ object EngineScanner {
                     engine = detected.engine,
                     launchTarget = detected.launchTarget,
                     externalModuleAlias = detected.externalModuleAlias,
-                    detectedRenpyVersion = detectRenpyVersionIfNeeded(detected, children, session),
+                    detectedRenpyVersion = null,
                     coverUri = coverUri,
                     coverSource = if (coverUri.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
                 )
@@ -329,7 +329,7 @@ object EngineScanner {
                     engine = detected.engine,
                     launchTarget = detected.launchTarget,
                     externalModuleAlias = detected.externalModuleAlias,
-                    detectedRenpyVersion = detectRenpyVersionIfNeeded(detected, children, session),
+                    detectedRenpyVersion = null,
                     coverUri = coverUri,
                     coverSource = if (coverUri.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
                 )
@@ -650,31 +650,6 @@ object EngineScanner {
      */
     private const val RUFFLE_MODULE_ALIAS = "internal.flash"
 
-    private fun detectRenpyVersionIfNeeded(
-        detection: Detection,
-        children: List<SafNode>,
-        session: SafScanSession,
-    ): String? {
-        if (detection.engine != EngineType.RENPY) return null
-        val gameDir = children.firstOrNull { it.isDirectory && it.name.equals("game", ignoreCase = true) }
-        val gameChildren = gameDir?.let(session::children).orEmpty()
-        val scriptVersionTxt = gameChildren
-            .firstOrNull { !it.isDirectory && it.name.equals("script_version.txt", ignoreCase = true) }
-            ?.let(session::readText)
-        val scriptVersionRpy = gameChildren
-            .firstOrNull { !it.isDirectory && it.name.equals("script_version.rpy", ignoreCase = true) }
-            ?.let(session::readText)
-        val libDir = children.firstOrNull { it.isDirectory && it.name.equals("lib", ignoreCase = true) }
-        val hasPython27 = libDir?.let(session::children)
-            ?.any { it.name.equals("pythonlib2.7", ignoreCase = true) } == true
-        return RenPyVersionDetector.detect(scriptVersionTxt, scriptVersionRpy, hasPython27)
-    }
-
-    private fun detectRenpyVersionIfNeeded(detection: Detection, dir: File): String? {
-        if (detection.engine != EngineType.RENPY) return null
-        return RenPyVersionDetector.detect(dir)
-    }
-
     private class FileScanSession {
         private val childrenCache = HashMap<String, Array<File>>()
         private val headCache = HashMap<String, ByteArray?>()
@@ -723,7 +698,7 @@ object EngineScanner {
                     engine = detected.engine,
                     launchTarget = detected.launchTarget,
                     externalModuleAlias = detected.externalModuleAlias,
-                    detectedRenpyVersion = detectRenpyVersionIfNeeded(detected, dir),
+                    detectedRenpyVersion = null,
                     coverUri = coverUri,
                     coverSource = if (coverUri.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
                 )
@@ -757,7 +732,7 @@ object EngineScanner {
                     engine = detected.engine,
                     launchTarget = detected.launchTarget,
                     externalModuleAlias = detected.externalModuleAlias,
-                    detectedRenpyVersion = detectRenpyVersionIfNeeded(detected, dir),
+                    detectedRenpyVersion = null,
                     coverUri = coverUri,
                     coverSource = if (coverUri.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
                 )

@@ -520,11 +520,7 @@ private fun refreshExternalInstallStates(
     engines: List<EngineType>,
 ): Map<EngineType, Boolean> =
     engines.mapNotNull { engine ->
-        // 安装状态与下载/启动一致：Ren'Py 按全局版本解析目标模块（而非「任一版本已装」）
-        val module = ExternalEngineModuleRegistry.resolveModule(
-            engine,
-            EngineSettingsStore.getRenpyVersion(context),
-        ) ?: return@mapNotNull null
+        val module = ExternalEngineModuleRegistry.moduleForEngine(engine) ?: return@mapNotNull null
         engine to ExternalEngineLauncher.isPackageInstalled(context, module)
     }.toMap()
 

@@ -1297,22 +1297,6 @@ private fun LazyListPlaceholder(
             RpgMakerRgssSettingsCard(settings = rpg, onSettings = onRpg)
         }
 
-        if (kind == EngineSettingsKind.RENPY) item {
-            EngineCard("Ren'Py") {
-                DropdownRow(stringResource(R.string.engine_settings_engine_version), renpyVersionMap, renpyVersion, onRenpyVersion)
-                Text(
-                    stringResource(R.string.engine_settings_renpy_module_description_global),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MiuixTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-        }
-
-        if (kind == EngineSettingsKind.RENPY) item {
-            RenPySettingsCard(settings = renpy, onSettings = onRenpy)
-        }
-
         if (kind == EngineSettingsKind.SIGLUS) item {
             EngineCard("Siglus") {
                 DropdownRow(

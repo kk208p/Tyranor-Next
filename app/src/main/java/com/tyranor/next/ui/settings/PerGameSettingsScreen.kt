@@ -904,44 +904,6 @@ fun PerGameSettingsScreen(game: ScanGame) {
                         }
                     }
                     }
-                    EngineType.RENPY -> item {
-                        SectionCard("Ren'Py") {
-                            OverrideChoice(stringResource(R.string.engine_settings_engine_version), renpyVersionMap, globalRenpyVersion, renpyVersion) { renpyVersion = it }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_hw_video), globalRenpy.hwVideo, renpy.hwVideo) {
-                                renpyOverride = renpy.copy(hwVideo = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_vsync), globalRenpy.vsync, renpy.vsync) {
-                                renpyOverride = renpy.copy(vsync = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_less_memory), globalRenpy.lessMemory, renpy.lessMemory) {
-                                renpyOverride = renpy.copy(lessMemory = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_dont_use_gl2), !globalRenpy.dontUseGl2, renpy.dontUseGl2?.let { !it }) {
-                                renpyOverride = renpy.copy(dontUseGl2 = it?.let { v -> !v })
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_phone_small_variant), globalRenpy.phoneSmallVariant, renpy.phoneSmallVariant) {
-                                renpyOverride = renpy.copy(phoneSmallVariant = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_autosave), globalRenpy.autosave, renpy.autosave) {
-                                renpyOverride = renpy.copy(autosave = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_less_updates), globalRenpy.lessUpdates, renpy.lessUpdates) {
-                                renpyOverride = renpy.copy(lessUpdates = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_recompile), globalRenpy.recompile, renpy.recompile) {
-                                renpyOverride = renpy.copy(recompile = it)
-                            }
-                            OverrideSwitch(stringResource(R.string.engine_settings_renpy_cheats), globalRenpy.cheats, renpy.cheats) {
-                                renpyOverride = renpy.copy(cheats = it)
-                            }
-                            Text(
-                                stringResource(R.string.engine_settings_renpy_module_description),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                            )
-                        }
-                    }
                     EngineType.RUFFLE -> item {
                         SectionCard(stringResource(R.string.engine_settings_ruffle_title)) {
                             OverrideChoice(
@@ -1398,6 +1360,8 @@ fun PerGameSettingsScreen(game: ScanGame) {
                             )
                         }
                     }
+                    // Ren'Py 外置模块已移除：历史记录不展示任何外置设置项
+                    EngineType.RENPY -> Unit
                 }
 
                 if (graphicsFamily != null && globalGraphics != null) item {

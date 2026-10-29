@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Process
 import android.util.Log
 import androidx.room.withTransaction
+import com.tyranor.next.core.game.RETIRED_EXTERNAL_ENGINES
 import com.tyranor.next.core.game.model.ScanGame
 import com.tyranor.next.core.game.scan.GameRecordCodec
 import com.tyranor.next.core.game.scan.GameRootMatcher
@@ -151,7 +152,7 @@ object GameLibraryRepository {
 
     suspend fun loadGames(context: Context): List<ScanGame> = withContext(Dispatchers.IO) {
         ensureMigrated(context)
-        dao(context).getAllGames().map { it.toModel() }
+        dao(context).getAllGames().map { it.toModel() }.filterNot { it.engine in RETIRED_EXTERNAL_ENGINES }
     }
 
     /** 权威差量落库：变更行单行 upsert（保留首次发现时间），消失行删除（级联清理快捷启动）。 */
@@ -207,6 +208,7 @@ object GameLibraryRepository {
     ): List<ScanGame> = withContext(Dispatchers.IO) {
         ensureMigrated(context)
         dao(context).getRecentGames(limit).map { it.toModel() }
+            .filterNot { it.engine in RETIRED_EXTERNAL_ENGINES }
     }
 
     /** 从最近打开列表移除：派生视图写 0 即移除。 */
@@ -253,7 +255,7 @@ object GameLibraryRepository {
             } else {
                 dao.searchGamesSortedByTitle(escaped)
             }
-            entities.map { it.toModel() }
+            entities.map { it.toModel() }.filterNot { it.engine in RETIRED_EXTERNAL_ENGINES }
         }
 
     /** LIKE 通配符转义，保证用户输入按字面匹配（与 UI contains 行为一致）。 */
@@ -289,6 +291,7 @@ object GameLibraryRepository {
     suspend fun loadQuickLaunch(context: Context): List<ScanGame> = withContext(Dispatchers.IO) {
         ensureMigrated(context)
         dao(context).getQuickLaunchGames().map { it.toModel() }
+            .filterNot { it.engine in RETIRED_EXTERNAL_ENGINES }
     }
 
     suspend fun replaceQuickLaunch(context: Context, orderedUris: List<String>) = withContext(Dispatchers.IO) {
