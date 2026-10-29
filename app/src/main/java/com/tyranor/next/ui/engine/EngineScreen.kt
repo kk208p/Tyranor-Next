@@ -42,12 +42,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import com.tyranor.next.R
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.ExternalEngineLauncher
-import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.game.launch.EngineLauncher
 import com.tyranor.next.core.settings.AppSettingsStore
 import com.tyranor.next.core.settings.EngineSettingsStore
@@ -68,26 +64,13 @@ import com.tyranor.next.ui.settings.artVersionOptions
 import top.yukonga.miuix.kmp.basic.TabRow
 import top.yukonga.miuix.kmp.basic.TabRowDefaults
 import androidx.compose.ui.graphics.Color
-import android.widget.Toast
 
 /** 引擎页：列表行展示已集成的游戏引擎。 */
 @Composable
 fun EngineScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
-    val engineOpenDownloadFailedMessage = stringResource(R.string.engine_open_download_failed)
     val engines = EngineLauncher.supportedEngines
-    var externalInstallStates by remember {
-        mutableStateOf(refreshExternalInstallStates(context, engines))
-    }
-    var moduleStates by remember {
-        mutableStateOf(refreshModuleStates(context))
-    }
     var moduleDialogEngine by remember { mutableStateOf<EngineType?>(null) }
-
-    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        externalInstallStates = refreshExternalInstallStates(context, engines)
-        moduleStates = refreshModuleStates(context)
-    }
 
     Column(modifier.fillMaxSize()) {
         AppTopBar(title = stringResource(R.string.nav_engine))
@@ -145,23 +128,12 @@ fun EngineScreen(modifier: Modifier = Modifier) {
                 key = { it.name },
                 contentType = { "engine" },
             ) { engine ->
-                val module = ExternalEngineModuleRegistry.moduleForEngine(engine)
-                val installed = when {
-                    module != null -> externalInstallStates[engine] == true
-                    else -> true
-                }
-                val statusRes = when {
-                    module != null ->
-                        if (installed) R.string.engine_module_installed else R.string.engine_module_not_installed
-
-                    else -> R.string.engine_integrated
-                }
                 EngineRow(
                     engine = engine,
-                    statusTextRes = statusRes,
-                    installed = installed,
-                    // 外置模块 / Tyrano/WebOther/VN/Artemis（内置版本条目）：点击弹窗
-                    enabled = module != null || engine in dialogOnlyEngines,
+                    statusTextRes = R.string.engine_integrated,
+                    installed = true,
+                    // 内置版本条目：点击弹窗
+                    enabled = engine in dialogOnlyEngines,
                     onClick = { moduleDialogEngine = engine },
                 )
             }
@@ -189,19 +161,13 @@ fun EngineScreen(modifier: Modifier = Modifier) {
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    engineDialogEntries(context, moduleStates, dialogEngine).forEach { entry ->
+                    engineDialogEntries(dialogEngine).forEach { entry ->
                         AppNavItem(
                             title = entry.title,
                             summary = stringResource(entry.summaryRes),
                             leadingIcon = R.drawable.ic_engine_chip,
                             containerColor = DialogItemSurface,
                         ) {
-                            if (!entry.installed && entry.installUrl != null) {
-                                val opened = ExternalEngineLauncher.openInstallPage(context, entry.installUrl)
-                                if (!opened) {
-                                    Toast.makeText(context, engineOpenDownloadFailedMessage, Toast.LENGTH_SHORT).show()
-                                }
-                            }
                             moduleDialogEngine = null
                         }
                     }
@@ -327,15 +293,6 @@ private fun engineDescription(engine: EngineType): String = when (engine) {
     EngineType.UNKNOWN -> stringResource(R.string.engine_desc_unknown)
 }
 
-private fun refreshExternalInstallStates(
-    context: android.content.Context,
-    engines: List<EngineType>,
-): Map<EngineType, Boolean> =
-    engines.mapNotNull { engine ->
-        val module = ExternalEngineModuleRegistry.moduleForEngine(engine) ?: return@mapNotNull null
-        engine to ExternalEngineLauncher.isPackageInstalled(context, module)
-    }.toMap()
-
 /** 内置 Tyranor 引擎版本名（Tyrano / WebOther/VN / RPG Maker MV/MZ 的网页壳共用）。 */
 private const val TYRANOR_BUILTIN_VERSION = "Tyranor-2.3.4"
 
@@ -401,29 +358,13 @@ private data class EngineDialogEntry(
     val title: String,
     @get:StringRes val summaryRes: Int,
     val installed: Boolean,
-    val installUrl: String? = null,
 )
 
 /** 弹窗条目列表：外置引擎取注册表模块；Artemis 列引擎设置中的内置版本；其余内置引擎见 [builtinDialogEntries]。 */
 @Composable
 private fun engineDialogEntries(
-    context: android.content.Context,
-    moduleStates: Map<String, Boolean>,
     engine: EngineType,
 ): List<EngineDialogEntry> {
-    val modules = ExternalEngineModuleRegistry.modules.filter { it.engine == engine }
-    if (modules.isNotEmpty()) {
-        return modules.sortedBy { it.displayName }.map { module ->
-            val installed = moduleStates[module.id] == true
-            EngineDialogEntry(
-                id = module.id,
-                title = module.displayName(context),
-                summaryRes = if (installed) R.string.engine_module_installed else R.string.engine_module_not_installed,
-                installed = installed,
-                installUrl = module.installUrl,
-            )
-        }
-    }
     return when {
         engine == EngineType.ARTEMIS -> artemisDialogEntries()
         engine in builtinDialogEntries -> builtinDialogEntries[engine].orEmpty()
@@ -454,10 +395,4 @@ private fun artemisDialogEntries(): List<EngineDialogEntry> =
 /** 「v1（Tyranor/Rev.2762）」→「Tyranor/Rev.2762」：去掉内部版本号与全角括号；不匹配时原样返回。 */
 private fun artemisDialogTitle(label: String): String =
     Regex("""^[vV]\d+（(.+)）$""").find(label)?.groupValues?.get(1) ?: label
-
-/** 各外置模块的独立安装状态（按 module id，与行图标的全局版本解析互不影响）。 */
-private fun refreshModuleStates(context: android.content.Context): Map<String, Boolean> =
-    ExternalEngineModuleRegistry.modules.associate { module ->
-        module.id to ExternalEngineLauncher.isPackageInstalled(context, module)
-    }
 

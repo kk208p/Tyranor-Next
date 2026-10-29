@@ -108,7 +108,6 @@ import com.tyranor.next.core.game.storage.GameLibraryFacade
 import com.tyranor.next.core.game.shortcut.deleteShortcutCropBitmap
 import com.tyranor.next.core.game.shortcut.GameShortcutManager
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.game.save.GameSaveManager
 import com.tyranor.next.core.game.save.RpgSaveFormat
 import com.tyranor.next.core.game.model.GameSortKeys
@@ -2213,13 +2212,11 @@ internal fun EngineType.coverColor(): Color = when (this) {
 }
 
 internal fun shouldShowSaveManagement(engine: EngineType): Boolean =
-    // 手动添加的类型（安卓游戏）无统一存档接口，显式排除；退役外置引擎与仍走外置模拟器的引擎不纳入。
+    // 手动添加的类型（安卓游戏）无统一存档接口，显式排除；退役外置引擎不纳入。
     !engine.isManual &&
         engine !in RETIRED_EXTERNAL_ENGINES &&
         (engine != EngineType.ETHORNELL ||
-            com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
-        !ExternalEngineModuleRegistry.isExternalEngine(engine)
-
+            com.tyranor.next.core.game.save.EthornellSaveCapability.available)
 /** 记录级判定：engine 字段损坏的安卓条目（uri 仍为 androidapp://）同样不显示存档管理。 */
 internal fun shouldShowSaveManagement(game: ScanGame): Boolean =
     !AndroidAppGames.isAndroidApp(game) && shouldShowSaveManagement(game.engine)

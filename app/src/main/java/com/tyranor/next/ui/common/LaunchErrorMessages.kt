@@ -2,7 +2,6 @@ package com.tyranor.next.ui.common
 
 import android.content.Context
 import com.tyranor.next.R
-import com.tyranor.next.core.engine.external.ExternalEngineErrorCode
 import com.tyranor.next.core.engine.plugin.EnginePluginBootstrap
 import com.tyranor.next.core.game.launch.LaunchResult
 import com.tyranor.next.core.game.launch.EthornellPrepareError
@@ -97,35 +96,6 @@ private fun LaunchResult.Failure.toUserMessage(context: Context): String {
 
         LaunchResult.Failure.Xs4Gles3Required ->
             localized.getString(R.string.launch_error_xs4_gles3_required)
-
-        is LaunchResult.Failure.ExternalModuleFailed -> {
-            val moduleName = result.moduleNameRes?.let { localized.getString(it) }
-                ?: result.moduleNameFallback.orEmpty()
-            when (result.error) {
-                ExternalEngineErrorCode.INVALID_GAME_PATH ->
-                    localized.getString(R.string.external_engine_resolve_dir_failed, result.engineName.orEmpty())
-
-                ExternalEngineErrorCode.PACKAGE_NOT_INSTALLED ->
-                    localized.getString(R.string.external_engine_module_missing, moduleName)
-
-                ExternalEngineErrorCode.PREPARE_FAILED ->
-                    result.messageRes?.let { localized.getString(it) }
-                        ?: result.detail
-                        ?: localized.getString(R.string.external_engine_launch_failed, moduleName)
-
-                ExternalEngineErrorCode.ACTIVITY_NOT_FOUND ->
-                    localized.getString(R.string.external_engine_no_activity, moduleName)
-
-                ExternalEngineErrorCode.SECURITY_EXCEPTION ->
-                    localized.getString(R.string.external_engine_denied, moduleName)
-
-                ExternalEngineErrorCode.LAUNCH_EXCEPTION, null ->
-                    result.detail ?: localized.getString(R.string.external_engine_launch_failed, moduleName)
-            }
-        }
-
-        LaunchResult.Failure.YurisExeMissing ->
-            localized.getString(R.string.launch_yuris_exe_missing)
 
         LaunchResult.Failure.AndroidAppMissing ->
             localized.getString(R.string.launch_android_app_missing)

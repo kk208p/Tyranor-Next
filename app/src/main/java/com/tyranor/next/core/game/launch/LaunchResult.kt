@@ -1,6 +1,5 @@
 package com.tyranor.next.core.game.launch
 
-import com.tyranor.next.core.engine.external.ExternalEngineLaunchResult
 import com.tyranor.next.core.engine.plugin.EnginePluginBootstrap
 
 /**
@@ -77,13 +76,6 @@ sealed interface LaunchResult {
 
         /** 设备不支持 OpenGL ES 3.0（System4 引擎的渲染要求）。 */
         data object Xs4Gles3Required : Failure
-
-        /** 外置 APK 引擎模块启动失败；携带模块层类型化错误（文案由 UI 映射）。 */
-        data class ExternalModuleFailed(val result: ExternalEngineLaunchResult) : Failure
-
-        /** YU-RIS：游戏目录内没有可启动的 .exe（可由单游戏「启动文件」手动指定）。 */
-        data object YurisExeMissing : Failure
-
         /** 手动添加的安卓应用不存在或不可启动（未安装 / 已卸载 / 无启动入口）。 */
         data object AndroidAppMissing : Failure
 
