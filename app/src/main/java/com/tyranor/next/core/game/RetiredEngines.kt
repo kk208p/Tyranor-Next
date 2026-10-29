@@ -12,4 +12,5 @@ import com.tyranor.next.core.engine.EngineType
 internal val RETIRED_EXTERNAL_ENGINES: Set<EngineType> = setOf(
     EngineType.RENPY,
     EngineType.RPGMAKER,
+    EngineType.RUFFLE,
 )

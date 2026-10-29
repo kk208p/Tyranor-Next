@@ -585,7 +585,7 @@ object EngineScanner {
                 uri = node.uri.toString(),
                 engine = engine,
                 launchTarget = node.name,
-                externalModuleAlias = romModuleAlias(engine),
+                externalModuleAlias = null,
                 coverUri = singleCover,
                 coverSource = if (singleCover.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
             )
@@ -617,7 +617,7 @@ object EngineScanner {
                 uri = rom.absolutePath,
                 engine = engine,
                 launchTarget = rom.name,
-                externalModuleAlias = romModuleAlias(engine),
+                externalModuleAlias = null,
                 coverUri = singleCover,
                 coverSource = if (singleCover.isNullOrBlank()) null else AppSettingsStore.COVER_SOURCE_LOCAL,
             )
@@ -640,15 +640,6 @@ object EngineScanner {
             romTitle(fileName)
         }
 
-    private fun romModuleAlias(engine: EngineType): String? =
-        if (engine == EngineType.RUFFLE) RUFFLE_MODULE_ALIAS else null
-
-    /**
-     * 扫描写入的 Ruffle 模块别名，与 `RuffleExternalEngineModule.defaultAlias` 保持同值。
-     * 扫描层不直接依赖 external 模块（避免 game-scan → engine-external 的耦合/循环），
-     * 两处如需改名必须同步。
-     */
-    private const val RUFFLE_MODULE_ALIAS = "internal.flash"
 
     private class FileScanSession {
         private val childrenCache = HashMap<String, Array<File>>()
@@ -1224,7 +1215,7 @@ object EngineScanner {
             xp3Files.isEmpty() && !hasStartupTjs && !hasConfigTjs &&
             !hasOnsScript && !hasOnsArchive && !isSystem4 && !hasConsoleRomChild
         ) {
-            return Detection(EngineType.RUFFLE, 88, ruffleSwf, RUFFLE_MODULE_ALIAS)
+            return Detection(EngineType.RUFFLE, 88, ruffleSwf, null)
         }
         if (hasIndex) {
             return Detection(EngineType.WEB_OTHER, 70, LAUNCH_TARGET_GAME_DIR)

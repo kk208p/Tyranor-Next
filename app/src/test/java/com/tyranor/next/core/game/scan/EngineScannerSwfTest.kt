@@ -35,7 +35,7 @@ class EngineScannerSwfTest {
 
         assertEquals(2, games.size)
         assertTrue(games.all { it.engine == EngineType.RUFFLE })
-        assertTrue(games.all { it.externalModuleAlias == "internal.flash" })
+        assertTrue(games.all { it.externalModuleAlias == null })
         val byTarget = games.associateBy { it.launchTarget }
         assertEquals(first.absolutePath, byTarget.getValue("first.swf").uri)
         assertEquals(second.absolutePath, byTarget.getValue("second.swf").uri)
@@ -96,7 +96,7 @@ class EngineScannerSwfTest {
 
         assertEquals(EngineType.RUFFLE, detection.engine)
         assertEquals("story.swf", detection.launchTarget)
-        assertEquals("internal.flash", detection.externalModuleAlias)
+        assertNull(detection.externalModuleAlias)
         assertTrue(detection.confidence > 0)
     }
 

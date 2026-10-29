@@ -4,9 +4,7 @@ import com.tyranor.next.core.engine.EngineType
 
 /** 外置 APK 引擎模块单一注册表。 */
 object ExternalEngineModuleRegistry {
-    val modules: List<ExternalEngineModule> = listOf(
-        RuffleExternalEngineModule,
-    )
+    val modules: List<ExternalEngineModule> = emptyList()
 
     fun moduleForEngine(engine: EngineType): ExternalEngineModule? =
         modules.firstOrNull { it.engine == engine }
