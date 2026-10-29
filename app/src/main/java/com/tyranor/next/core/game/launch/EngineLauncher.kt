@@ -22,7 +22,6 @@ import com.core.engine.EngineSessionRegistry
 import com.core.engine.KrkrStartupDialogPolicy
 import com.core.engine.LaunchContract
 import com.tyranor.next.core.i18n.AppLocaleController
-import com.tyranor.next.core.engine.external.EmulatorTarget as ExternalEmulatorTarget
 import com.core.fvp.FvpActivity
 import com.core.games.FramebufferGameActivity
 import com.core.krkrsdl3.Krkrsdl3Activity
@@ -36,8 +35,6 @@ import com.tyranor.next.core.engine.graphics.GraphicsLaunchPolicy
 import com.tyranor.next.core.engine.graphics.putDisabledGraphicsRequest
 import com.tyranor.next.core.engine.graphics.putGraphicsExtras
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.ExternalEmulatorLauncher
-import com.tyranor.next.core.engine.external.ExternalEmulatorRegistry
 import com.tyranor.next.core.engine.external.ExternalEngineErrorCode
 import com.tyranor.next.core.engine.external.ExternalEngineLaunchRequest
 import com.tyranor.next.core.engine.external.ExternalEngineLaunchResult
@@ -136,10 +133,7 @@ object EngineLauncher {
         EngineType.UK2,
         EngineType.FVP,
         EngineType.ETHORNELL,
-        // RUFFLE 外置模块已移除；识别结果仅用于库过滤
-        // PSP/Switch 不参与内置/外置 APK 链路，仅用于引擎页「主机系列」展示与外置模拟器跳转
-        EngineType.PSP,
-        EngineType.NINTENDO_SWITCH,
+        // RUFFLE / PSP / Switch 等外置能力已移除；识别结果仅用于库过滤与历史记录隐藏
         // ANDROID_APP 为手动添加的直接跳转条目（无运行时/设置/存档），故不收录、不出现在引擎页
     ).sortedByDescending { it.displayName.length }
 
@@ -261,24 +255,6 @@ object EngineLauncher {
         // 已退役的外置引擎：历史库记录仍可能触发启动，明确失败而不是落入内置链路
         if (game.engine in RETIRED_EXTERNAL_ENGINES) {
             return LaunchResult.Failure.StartFailed(null)
-        }
-        // 外置模拟器跳转：PSP / Switch 为 ROM 文件型（不解析目录）
-        ExternalEmulatorRegistry.forEngine(game.engine)?.let { target ->
-            currentCoroutineContext().ensureActive()
-            // PSP：按三级设置的「PPSSPP 版本」解析标准版/黄金版目标；其余目标（Eden）固定
-            val resolvedTarget = if (target.supports(EngineType.PSP)) {
-                ExternalEmulatorRegistry.ppssppTarget(
-                    EngineSettingsResolver.resolve(context, game, null).ppssppVersion,
-                )
-            } else {
-                target
-            }
-            val result = ExternalEmulatorLauncher.launch(context, resolvedTarget, game.uri)
-            if (result.success) {
-                GameLibraryFacade.recordRecentGame(context, game)
-                return LaunchResult.Success
-            }
-            return LaunchResult.Failure.ExternalEmulatorFailed(result)
         }
         // 外置模块先于内置目录解析确定路径：文件型入口（SWF）取所在目录，其余保持目录解析
         val defaultModule = ExternalEngineModuleRegistry.moduleForEngine(game.engine)

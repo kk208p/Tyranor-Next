@@ -36,8 +36,8 @@ class GameCardItemKeyTest {
         assertEquals(false, shouldShowSaveManagement(EngineType.RUFFLE))
         assertEquals(true, shouldShowSaveManagement(EngineType.KIRIKIRI))
         assertEquals(true, shouldShowSaveManagement(EngineType.RPG_MV))
-        // YU-RIS 存档在游戏目录 save/：显示存档管理；PC（手动添加）与 PSP/Switch 隐藏
-        assertEquals(true, shouldShowSaveManagement(EngineType.YURIS))
+        // 退役外置引擎（YU-RIS / CatSystem2 / PC / PSP / Switch）不再提供存档管理入口
+        assertEquals(false, shouldShowSaveManagement(EngineType.YURIS))
         assertEquals(false, shouldShowSaveManagement(EngineType.NINTENDO_SWITCH))
         assertEquals(false, shouldShowSaveManagement(EngineType.PC))
         assertEquals(false, shouldShowSaveManagement(EngineType.CATSYSTEM2))

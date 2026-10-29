@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.tyranor.next.R
 import androidx.compose.ui.graphics.Color as ComposeColor
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.ExternalEmulatorRegistry
 import com.tyranor.next.core.game.launch.EngineLauncher
 import com.tyranor.next.core.game.model.GamePathUtils
 import com.tyranor.next.core.game.model.ScanGame
@@ -126,7 +125,6 @@ fun PerGameSettingsScreen(game: ScanGame) {
     var ethornellFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_FONT)) }
     var fvpSystemFont by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT)) }
     var fvpTextHidpi by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI)) }
-    var ppssppVersion by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_PPSSPP_VERSION)) }
     var webShellPort by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_WEB_SHELL_PORT)) }
     var fvpFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_FVP_FONT)) }
     var xs35Scoped by remember(gid) { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_XSYS35_SCOPED_SAVE_DIR)) }
@@ -397,9 +395,7 @@ fun PerGameSettingsScreen(game: ScanGame) {
     // 只填名称时摘要直接呈现生效值，不再加「跟随全局 ·」前缀——容器模式下没有「跟随全局」语义。
     val winlatorContainerIdSummaryOverride =
         winlatorAutoByContainerNameLabel.takeIf { winlatorNameOnlyOverride }
-    val globalPpssppVersion = EngineSettingsStore.getPpssppVersion(ctx)
     val globalWebShellPort = EngineSettingsStore.getWebShellPort(ctx)
-    val ppssppVersionMap = ppssppVersionOptionsMap()
     val winlatorDriverMap = winlatorGraphicsDriverOptionsMap()
     val winlatorDxWrapperMap = winlatorDxWrapperOptionsMap()
     val winlatorScreenSizeMap = winlatorScreenSizeOptionsMap()
@@ -503,7 +499,6 @@ fun PerGameSettingsScreen(game: ScanGame) {
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_FONT, ethornellFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT, fvpSystemFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI, fvpTextHidpi)
-        PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_PPSSPP_VERSION, ppssppVersion)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_WEB_SHELL_PORT, webShellPort)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_FVP_FONT, fvpFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_XSYS35_SCOPED_SAVE_DIR, xs35Scoped)
@@ -1083,32 +1078,7 @@ fun PerGameSettingsScreen(game: ScanGame) {
                             }
                         }
                     }
-                    EngineType.PSP -> item {
-                        SectionCard(game.engine.displayName) {
-                            OverrideChoice(
-                                stringResource(R.string.engine_settings_ppsspp_version_title),
-                                ppssppVersionMap,
-                                globalPpssppVersion,
-                                ppssppVersion,
-                            ) { ppssppVersion = it }
-                            Text(
-                                stringResource(R.string.engine_settings_ppsspp_note),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                            )
-                        }
-                    }
-                    EngineType.NINTENDO_SWITCH -> item {
-                        SectionCard(game.engine.displayName) {
-                            Text(
-                                stringResource(R.string.engine_settings_external_emulator_hint),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
-                            )
-                        }
-                    }
+                    EngineType.PSP, EngineType.NINTENDO_SWITCH -> Unit
                     EngineType.YURIS -> item {
                         SectionCard(game.engine.displayName) {
                             Text(

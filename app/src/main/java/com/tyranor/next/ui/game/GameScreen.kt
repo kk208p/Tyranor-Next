@@ -108,7 +108,6 @@ import com.tyranor.next.core.game.storage.GameLibraryFacade
 import com.tyranor.next.core.game.shortcut.deleteShortcutCropBitmap
 import com.tyranor.next.core.game.shortcut.GameShortcutManager
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.ExternalEmulatorRegistry
 import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.game.save.GameSaveManager
 import com.tyranor.next.core.game.save.RpgSaveFormat
@@ -2219,8 +2218,7 @@ internal fun shouldShowSaveManagement(engine: EngineType): Boolean =
         engine !in RETIRED_EXTERNAL_ENGINES &&
         (engine != EngineType.ETHORNELL ||
             com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
-        !ExternalEngineModuleRegistry.isExternalEngine(engine) &&
-        ExternalEmulatorRegistry.forEngine(engine) == null
+        !ExternalEngineModuleRegistry.isExternalEngine(engine)
 
 /** 记录级判定：engine 字段损坏的安卓条目（uri 仍为 androidapp://）同样不显示存档管理。 */
 internal fun shouldShowSaveManagement(game: ScanGame): Boolean =

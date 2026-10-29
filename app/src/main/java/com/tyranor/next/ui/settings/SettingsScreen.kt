@@ -768,7 +768,6 @@ internal fun EngineSettingsDetailScreen(kind: EngineSettingsKind) {
     var xs4Joypad by remember { mutableStateOf(EngineSettingsStore.getXs4Joypad(ctx)) }
     var xs4MsgskipDelay by remember { mutableStateOf(EngineSettingsStore.getXs4MsgskipDelay(ctx)) }
     var winlator by remember { mutableStateOf(EngineSettingsStore.loadWinlator(ctx)) }
-    var ppssppVersion by remember { mutableStateOf(EngineSettingsStore.getPpssppVersion(ctx)) }
     var webShellPort by remember { mutableStateOf(EngineSettingsStore.getWebShellPort(ctx)) }
 
     val fontImportScope = rememberCoroutineScope()
@@ -895,7 +894,6 @@ internal fun EngineSettingsDetailScreen(kind: EngineSettingsKind) {
         EngineSettingsStore.setXs4Joypad(ctx, xs4Joypad)
         EngineSettingsStore.setXs4MsgskipDelay(ctx, xs4MsgskipDelay)
         EngineSettingsStore.saveWinlator(ctx, winlator)
-        EngineSettingsStore.setPpssppVersion(ctx, ppssppVersion)
         EngineSettingsStore.setWebShellPort(ctx, webShellPort)
     }
 
@@ -929,7 +927,7 @@ internal fun EngineSettingsDetailScreen(kind: EngineSettingsKind) {
                 xs35Scoped, xs35Renderer, xs35IntegerScale, xs35MuteUnfocus,
                 xs4Scoped, xs4Encoding, xs4FontGothic, xs4FontMincho, xs4Joypad, xs4MsgskipDelay,
                 fontLauncher, fvpFontLauncher, xs4GothicFontLauncher, xs4MinchoFontLauncher,
-                winlator, ppssppVersion, webShellPort,
+                winlator, webShellPort,
                 topInset = innerPadding.calculateTopPadding(),
                 graphicsContent = {
                     graphicsFamily?.let { family ->
@@ -995,7 +993,6 @@ internal fun EngineSettingsDetailScreen(kind: EngineSettingsKind) {
                 onXs4Joypad = { xs4Joypad = it },
                 onXs4MsgskipDelay = { xs4MsgskipDelay = it },
                 onWinlator = { winlator = it },
-                onPpssppVersion = { ppssppVersion = it },
                 onWebShellPort = { webShellPort = it },
             )
         }
@@ -1063,7 +1060,6 @@ private fun LazyListPlaceholder(
     fontLauncher: FontPickerLauncher, fvpFontLauncher: FontPickerLauncher,
     xs4GothicFontLauncher: FontPickerLauncher, xs4MinchoFontLauncher: FontPickerLauncher,
     winlator: EngineSettingsStore.Winlator,
-    ppssppVersion: String,
     webShellPort: Int,
     topInset: Dp,
     graphicsContent: @Composable () -> Unit,
@@ -1104,7 +1100,6 @@ private fun LazyListPlaceholder(
     onXs4Joypad: (String) -> Unit,
     onXs4MsgskipDelay: (Int) -> Unit,
     onWinlator: (EngineSettingsStore.Winlator) -> Unit,
-    onPpssppVersion: (String) -> Unit,
     onWebShellPort: (Int) -> Unit,
 ) {
     val krSelectMap = krSelectOptions()
@@ -1451,24 +1446,7 @@ private fun LazyListPlaceholder(
                 )
             }
         }
-
-        if (kind == EngineSettingsKind.PPSSPP) item {
-            EngineCard("PPSSPP") {
-                DropdownRow(
-                    stringResource(R.string.engine_settings_ppsspp_version_title),
-                    ppssppVersionOptions(),
-                    ppssppVersion,
-                    onPpssppVersion,
-                )
-                Text(
-                    stringResource(R.string.engine_settings_ppsspp_note),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MiuixTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-        }
-
+
         if (kind == EngineSettingsKind.WINLATOR) item {
             EngineCard("Winlator") {
                 WinlatorValueRow(

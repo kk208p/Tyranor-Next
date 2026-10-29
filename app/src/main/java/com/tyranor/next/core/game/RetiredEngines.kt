@@ -16,4 +16,6 @@ internal val RETIRED_EXTERNAL_ENGINES: Set<EngineType> = setOf(
     EngineType.YURIS,
     EngineType.CATSYSTEM2,
     EngineType.PC,
+    EngineType.PSP,
+    EngineType.NINTENDO_SWITCH,
 )
