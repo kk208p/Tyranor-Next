@@ -102,6 +102,7 @@ import com.tyranor.next.core.cover.CoverSearchCandidate
 import com.tyranor.next.core.cover.CoverSearchResult
 import com.tyranor.next.core.cover.CoverScraperService
 import com.tyranor.next.core.game.launch.EngineLauncher
+import com.tyranor.next.core.game.RETIRED_EXTERNAL_ENGINES
 import com.tyranor.next.core.game.manual.AndroidAppGames
 import com.tyranor.next.core.game.storage.GameLibraryFacade
 import com.tyranor.next.core.game.shortcut.deleteShortcutCropBitmap
@@ -2227,6 +2228,7 @@ internal fun shouldShowSaveManagement(engine: EngineType): Boolean =
     // 手动添加的类型（PC / 安卓游戏）无统一存档接口，显式排除。
     engine == EngineType.YURIS ||
         (!engine.isManual &&
+            engine !in RETIRED_EXTERNAL_ENGINES &&
             (engine != EngineType.ETHORNELL ||
                 com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
             !ExternalEngineModuleRegistry.isExternalEngine(engine) &&

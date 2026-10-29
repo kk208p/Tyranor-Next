@@ -46,6 +46,7 @@ import com.tyranor.next.core.engine.external.ExternalEngineLauncher
 import com.tyranor.next.core.engine.external.WinlatorContract
 import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.engine.plugin.EnginePluginBootstrap
+import com.tyranor.next.core.game.RETIRED_EXTERNAL_ENGINES
 import com.tyranor.next.core.game.manual.AndroidAppGames
 import com.tyranor.next.core.game.model.GamePathUtils
 import com.tyranor.next.core.game.model.EthornellPaths
@@ -124,7 +125,6 @@ object EngineLauncher {
         EngineType.KIRIKIRI,
         EngineType.ONS,
         EngineType.TYRANO,
-        EngineType.RPGMAKER,
         EngineType.RPG_MV,
         EngineType.RPG_MZ,
         EngineType.VN,
@@ -264,8 +264,8 @@ object EngineLauncher {
         if (AndroidAppGames.isAndroidApp(game)) {
             return launchAndroidApp(context, game)
         }
-        // Ren'Py 外置模块已从本分支移除：历史库记录仍可能触发启动，明确失败而不是落入内置链路
-        if (game.engine == EngineType.RENPY) {
+        // 已退役的外置引擎：历史库记录仍可能触发启动，明确失败而不是落入内置链路
+        if (game.engine in RETIRED_EXTERNAL_ENGINES) {
             return LaunchResult.Failure.StartFailed(null)
         }
         // 外置模拟器跳转：PSP / Switch 为 ROM 文件型（不解析目录），
