@@ -133,10 +133,6 @@ private fun LaunchResult.Failure.toUserMessage(context: Context): String {
                 "activity_not_found" ->
                     localized.getString(R.string.launch_emulator_no_activity, targetName)
 
-                // 已安装但不支持外置启动的旧版 Winlator（缺少导出入口）
-                "external_launch_unsupported" ->
-                    localized.getString(R.string.launch_emulator_unsupported, targetName)
-
                 "security_exception" ->
                     localized.getString(R.string.launch_emulator_denied, targetName)
 

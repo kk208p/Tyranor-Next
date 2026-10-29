@@ -22,7 +22,6 @@ import com.core.engine.EngineSessionRegistry
 import com.core.engine.KrkrStartupDialogPolicy
 import com.core.engine.LaunchContract
 import com.tyranor.next.core.i18n.AppLocaleController
-import com.tyranor.next.core.engine.external.EmulatorLaunchStyle
 import com.tyranor.next.core.engine.external.EmulatorTarget as ExternalEmulatorTarget
 import com.core.fvp.FvpActivity
 import com.core.games.FramebufferGameActivity
@@ -43,7 +42,6 @@ import com.tyranor.next.core.engine.external.ExternalEngineErrorCode
 import com.tyranor.next.core.engine.external.ExternalEngineLaunchRequest
 import com.tyranor.next.core.engine.external.ExternalEngineLaunchResult
 import com.tyranor.next.core.engine.external.ExternalEngineLauncher
-import com.tyranor.next.core.engine.external.WinlatorContract
 import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.engine.plugin.EnginePluginBootstrap
 import com.tyranor.next.core.game.RETIRED_EXTERNAL_ENGINES
@@ -139,10 +137,6 @@ object EngineLauncher {
         EngineType.FVP,
         EngineType.ETHORNELL,
         // RUFFLE 外置模块已移除；识别结果仅用于库过滤
-        // YURIS / CatSystem2 / PC 由外置 Winlator 承载（GAL 分组），引擎页条目点击进入引擎专属弹窗
-        EngineType.YURIS,
-        EngineType.CATSYSTEM2,
-        EngineType.PC,
         // PSP/Switch 不参与内置/外置 APK 链路，仅用于引擎页「主机系列」展示与外置模拟器跳转
         EngineType.PSP,
         EngineType.NINTENDO_SWITCH,
@@ -268,13 +262,9 @@ object EngineLauncher {
         if (game.engine in RETIRED_EXTERNAL_ENGINES) {
             return LaunchResult.Failure.StartFailed(null)
         }
-        // 外置模拟器跳转：PSP / Switch 为 ROM 文件型（不解析目录），
-        // YURIS 为 Windows 游戏（目录 + 主 exe，经 Winlator 外置启动协议挂载目录）
+        // 外置模拟器跳转：PSP / Switch 为 ROM 文件型（不解析目录）
         ExternalEmulatorRegistry.forEngine(game.engine)?.let { target ->
             currentCoroutineContext().ensureActive()
-            if (target.launchStyle == EmulatorLaunchStyle.WINLATOR_EXTERNAL) {
-                return launchWindowsViaWinlator(context, game, target)
-            }
             // PSP：按三级设置的「PPSSPP 版本」解析标准版/黄金版目标；其余目标（Eden）固定
             val resolvedTarget = if (target.supports(EngineType.PSP)) {
                 ExternalEmulatorRegistry.ppssppTarget(
@@ -991,47 +981,6 @@ object EngineLauncher {
         } catch (e: Exception) {
             LaunchResult.Failure.StartFailed(e.message)
         }
-    }
-
-    /**
-     * Windows 游戏（YU-RIS / 手动添加的 PC）经外置 Winlator 启动：解析游戏目录真实路径 →
-     * 解析主 exe（`launchFile` 优先）→ 交给 Winlator 挂载目录（自动空闲盘符）并按相对文件名启动。
-     * 运行参数由 Winlator 管理，主 App 只负责识别与跳转。
-     */
-    private suspend fun launchWindowsViaWinlator(
-        context: Context,
-        game: ScanGame,
-        target: ExternalEmulatorTarget,
-    ): LaunchResult {
-        val path = resolveGameDirectory(context, game) ?: return LaunchResult.Failure.GameDirUnresolved
-        requestAllFilesAccessIfNeeded(context, game, path)?.let { return it }
-        val exeName = YurisLaunchFiles.resolveExeName(game, path)
-            ?: return LaunchResult.Failure.YurisExeMissing
-        currentCoroutineContext().ensureActive()
-        val winlator = EngineSettingsResolver.resolve(context, game, path).winlator
-        val result = ExternalEmulatorLauncher.launchWinlator(
-            context = context,
-            target = target,
-            dirPath = path,
-            exeName = exeName,
-            launchId = game.uri,
-            options = WinlatorContract.LaunchOptions(
-                containerId = winlator.containerId,
-                containerName = winlator.containerName,
-                graphicsDriver = winlator.graphicsDriver,
-                dxwrapper = winlator.dxwrapper,
-                screenSize = winlator.screenSize,
-                lcAll = winlator.lcAll,
-                tz = winlator.tz,
-                box64Preset = winlator.box64Preset,
-                save = winlator.save,
-            ),
-        )
-        if (result.success) {
-            GameLibraryFacade.recordRecentGame(context, game)
-            return LaunchResult.Success
-        }
-        return LaunchResult.Failure.ExternalEmulatorFailed(result)
     }
 
     /**
@@ -2187,21 +2136,6 @@ object EngineLauncher {
         val path = resolveGameDirectory(context, game)
         val entries = readLaunchFileEntries(context, game, path)
         return when (game.engine) {
-            // YU-RIS / CatSystem2 / 手动添加的 PC 共用 Windows exe 候选（过滤干扰项并按可信度排序）；
-            // CatSystem2 额外接受 .bin（Runtime 可能被改名/改扩展名）并优先 cs2.exe
-            EngineType.YURIS, EngineType.CATSYSTEM2, EngineType.PC -> {
-                val allowBin = game.engine == EngineType.CATSYSTEM2
-                val candidates = YurisLaunchFiles.candidatesOf(
-                    entries.map { YurisLaunchFiles.ExeCandidate(it.name, it.size) },
-                    launchFileDirName(path, game.title),
-                    allowBin = allowBin,
-                    preferCs2Runtime = game.engine == EngineType.CATSYSTEM2,
-                )
-                LaunchFileOptions(
-                    names = candidates.map { it.name },
-                    current = LaunchFileCandidates.windowsCurrentName(candidates, game.launchFile, allowBin),
-                )
-            }
             else -> LaunchFileOptions(
                 names = LaunchFileCandidates.krkrNames(entries),
                 current = LaunchFileCandidates.krkrCurrentName(entries, game),

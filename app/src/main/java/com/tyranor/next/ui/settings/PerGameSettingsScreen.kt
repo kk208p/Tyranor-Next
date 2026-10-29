@@ -40,7 +40,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.tyranor.next.R
 import androidx.compose.ui.graphics.Color as ComposeColor
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.EmulatorLaunchStyle
 import com.tyranor.next.core.engine.external.ExternalEmulatorRegistry
 import com.tyranor.next.core.game.launch.EngineLauncher
 import com.tyranor.next.core.game.model.GamePathUtils
@@ -1530,10 +1529,8 @@ private fun OverrideFontPreference(
     }
 }
 
-/** 经外置 Winlator 启动的引擎（YU-RIS / CatSystem2 / 手动添加的 PC）：展示 Winlator 覆盖卡片。 */
-private val WINLATOR_LAUNCH_ENGINES: Set<EngineType> = EngineType.entries
-    .filter { ExternalEmulatorRegistry.forEngine(it)?.launchStyle == EmulatorLaunchStyle.WINLATOR_EXTERNAL }
-    .toSet()
+/** P4 已移除 Winlator 外置启动：覆盖卡片不再展示，Winlator 设置项待 P6 收口删除。 */
+private val WINLATOR_LAUNCH_ENGINES: Set<EngineType> = emptySet()
 
 /** 覆盖版文本行：弹统一输入框；确定=写入覆盖（空串=显式不下发该参数），「跟随全局」=移除覆盖。 */
 /** 容器 ID / 名称两行：跟随容器与自定义卡片复用，规则只在这里维护一份。 */

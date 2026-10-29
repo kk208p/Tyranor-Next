@@ -122,5 +122,6 @@ enum class EngineSettingsKind(@param:StringRes val titleRes: Int, @param:Drawabl
     XSYS35(R.string.engine_settings_xsys35_title, R.drawable.ic_settings_engine),
     XSYS4(R.string.engine_settings_xsys4_title, R.drawable.ic_settings_engine),
     PPSSPP(R.string.engine_settings_ppsspp_title, R.drawable.ic_settings_engine),
+    // P4 已移除 Winlator 外置启动；该设置页入口不再从引擎设置菜单展示，待 P6 收口时连同 Winlator 设置项删除
     WINLATOR(R.string.engine_settings_winlator_title, R.drawable.ic_settings_engine),
 }

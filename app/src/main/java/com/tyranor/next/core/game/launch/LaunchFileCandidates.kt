@@ -72,24 +72,4 @@ internal object LaunchFileCandidates {
         }?.name
     }
 
-    /**
-     * Windows（YU-RIS / PC / CatSystem2）当前入口名：手动（可含子目录）优先，其次自动首选项。
-     * 子目录手动项不在根目录候选内，原样返回（弹窗不预选）。
-     */
-    fun windowsCurrentName(
-        candidates: List<YurisLaunchFiles.ExeCandidate>,
-        manual: String?,
-        allowBin: Boolean,
-    ): String? {
-        manual?.takeIf { it.isNotBlank() }?.let { raw ->
-            val normalized = raw.trim().replace('\\', '/')
-            // 子目录手动项不在根目录候选列表内：原样返回（弹窗不预选）
-            if (normalized.contains('/')) return normalized
-            if (YurisLaunchFiles.isLaunchableName(normalized, allowBin)) {
-                // 列表中存在同项时回显列表原始名（SAF 与真实路径大小写可能不同）
-                return candidates.firstOrNull { it.name.equals(normalized, ignoreCase = true) }?.name ?: normalized
-            }
-        }
-        return candidates.firstOrNull()?.name
-    }
 }

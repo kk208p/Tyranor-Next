@@ -108,7 +108,6 @@ import com.tyranor.next.core.game.storage.GameLibraryFacade
 import com.tyranor.next.core.game.shortcut.deleteShortcutCropBitmap
 import com.tyranor.next.core.game.shortcut.GameShortcutManager
 import com.tyranor.next.core.engine.EngineType
-import com.tyranor.next.core.engine.external.EmulatorLaunchStyle
 import com.tyranor.next.core.engine.external.ExternalEmulatorRegistry
 import com.tyranor.next.core.engine.external.ExternalEngineModuleRegistry
 import com.tyranor.next.core.game.save.GameSaveManager
@@ -604,13 +603,7 @@ private fun GameLibraryContent(
     when (addGameStep) {
         AddGameStep.CHOICE -> AddGameDialog(
             onDismiss = { addGameStep = null },
-            onAddPc = { addGameStep = AddGameStep.PC },
             onAddAndroid = { addGameStep = AddGameStep.ANDROID },
-        )
-
-        AddGameStep.PC -> PcGameAddDialog(
-            onDismiss = { addGameStep = null },
-            onAdd = onAddManualGame,
         )
 
         AddGameStep.ANDROID -> AndroidGameAddDialog(
@@ -625,7 +618,7 @@ private fun GameLibraryContent(
 }
 
 /** 「添加游戏」流程弹窗步骤（游戏页顶栏入口 → 分支 → 二级添加弹窗）。 */
-private enum class AddGameStep { CHOICE, PC, ANDROID }
+private enum class AddGameStep { CHOICE, ANDROID }
 
 /** 抽屉内「一行两个」动作条目描述；[key] 供 LazyColumn item key 使用。 */
 private data class DrawerAction(
@@ -955,11 +948,8 @@ internal fun GameActionsSheet(
                     onClick = { beginLaunch() },
                 )
             }
-            // KRKR 与所有 Winlator 系引擎（YU-RIS / CatSystem2 / PC）支持启动文件切换
-            if (
-                game.engine == EngineType.KIRIKIRI ||
-                ExternalEmulatorRegistry.forEngine(game.engine)?.launchStyle == EmulatorLaunchStyle.WINLATOR_EXTERNAL
-            ) {
+            // KRKR 支持启动文件切换
+            if (game.engine == EngineType.KIRIKIRI) {
                 item {
                     AppNavItem(
                         title = stringResource(R.string.game_launch_file),
@@ -2224,15 +2214,13 @@ internal fun EngineType.coverColor(): Color = when (this) {
 }
 
 internal fun shouldShowSaveManagement(engine: EngineType): Boolean =
-    // YU-RIS 虽经外置 Winlator 启动，但存档落在游戏目录 save/，纳入统一存档管理；
-    // 手动添加的类型（PC / 安卓游戏）无统一存档接口，显式排除。
-    engine == EngineType.YURIS ||
-        (!engine.isManual &&
-            engine !in RETIRED_EXTERNAL_ENGINES &&
-            (engine != EngineType.ETHORNELL ||
-                com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
-            !ExternalEngineModuleRegistry.isExternalEngine(engine) &&
-            ExternalEmulatorRegistry.forEngine(engine) == null)
+    // 手动添加的类型（安卓游戏）无统一存档接口，显式排除；退役外置引擎与仍走外置模拟器的引擎不纳入。
+    !engine.isManual &&
+        engine !in RETIRED_EXTERNAL_ENGINES &&
+        (engine != EngineType.ETHORNELL ||
+            com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
+        !ExternalEngineModuleRegistry.isExternalEngine(engine) &&
+        ExternalEmulatorRegistry.forEngine(engine) == null
 
 /** 记录级判定：engine 字段损坏的安卓条目（uri 仍为 androidapp://）同样不显示存档管理。 */
 internal fun shouldShowSaveManagement(game: ScanGame): Boolean =

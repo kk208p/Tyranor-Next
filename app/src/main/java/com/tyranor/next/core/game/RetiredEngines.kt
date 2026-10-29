@@ -13,4 +13,7 @@ internal val RETIRED_EXTERNAL_ENGINES: Set<EngineType> = setOf(
     EngineType.RENPY,
     EngineType.RPGMAKER,
     EngineType.RUFFLE,
+    EngineType.YURIS,
+    EngineType.CATSYSTEM2,
+    EngineType.PC,
 )

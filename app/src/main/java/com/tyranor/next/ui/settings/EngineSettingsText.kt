@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import com.tyranor.next.R
-import com.tyranor.next.core.engine.external.WinlatorContract
 import com.tyranor.next.core.settings.EngineSettingsStore
 import com.tyranor.next.core.settings.GraphicsFilterCatalog
 import com.tyranor.next.core.settings.GraphicsFilterCategory
@@ -340,8 +339,8 @@ internal fun winlatorDxWrapperOptions(): List<Pair<String, String>> =
         value to when (value) {
             "" -> stringResource(R.string.engine_settings_winlator_follow_container)
             "wined3d" -> stringResource(R.string.engine_settings_winlator_wined3d_container)
-            WinlatorContract.DXWRAPPER_WINED3D_GL -> stringResource(R.string.engine_settings_winlator_wined3d_gl)
-            WinlatorContract.DXWRAPPER_WINED3D_GDI -> stringResource(R.string.engine_settings_winlator_wined3d_gdi)
+            "wined3d_gl" -> stringResource(R.string.engine_settings_winlator_wined3d_gl)
+            "wined3d_gdi" -> stringResource(R.string.engine_settings_winlator_wined3d_gdi)
             else -> value
         }
     }

@@ -3,7 +3,6 @@ package com.tyranor.next.core.settings
 import android.content.Context
 import com.core.engine.EnginePrefs
 import com.core.engine.LaunchContract
-import com.tyranor.next.core.engine.external.WinlatorContract
 import org.json.JSONObject
 
 /**
@@ -380,8 +379,8 @@ object EngineSettingsStore {
 
     val WINLATOR_DXWRAPPERS: Set<String> = linkedSetOf(
         "", "dxvk", "wined3d",
-        WinlatorContract.DXWRAPPER_WINED3D_GL,
-        WinlatorContract.DXWRAPPER_WINED3D_GDI,
+        "wined3d_gl",
+        "wined3d_gdi",
     )
 
     val WINLATOR_BOX64_PRESETS: Set<String> = linkedSetOf(

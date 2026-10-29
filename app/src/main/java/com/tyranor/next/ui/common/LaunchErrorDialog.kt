@@ -33,7 +33,6 @@ fun LaunchResult.toErrorState(context: Context): LaunchErrorState? {
         ?.takeIf {
             when (it.result.code) {
                 ExternalEmulatorLauncher.CODE_PACKAGE_NOT_INSTALLED,
-                ExternalEmulatorLauncher.CODE_EXTERNAL_LAUNCH_UNSUPPORTED,
                 ExternalEmulatorLauncher.CODE_ACTIVITY_NOT_FOUND,
                 -> true
 
