@@ -1447,68 +1447,6 @@ private fun LazyListPlaceholder(
             }
         }
 
-        if (kind == EngineSettingsKind.WINLATOR) item {
-            EngineCard("Winlator") {
-                WinlatorValueRow(
-                    label = stringResource(R.string.engine_settings_winlator_container_id_title),
-                    summaryHint = stringResource(R.string.engine_settings_winlator_container_id_summary),
-                    value = if (winlator.containerId > 0) winlator.containerId.toString() else "",
-                    sanitize = { it.filter { ch -> ch.isDigit() }.take(6) },
-                    onValueChange = { text ->
-                        onWinlator(winlator.copy(containerId = text.toIntOrNull()?.coerceAtLeast(0) ?: 0))
-                    },
-                )
-                WinlatorValueRow(
-                    label = stringResource(R.string.engine_settings_winlator_container_name_title),
-                    summaryHint = stringResource(R.string.engine_settings_winlator_container_name_summary),
-                    value = winlator.containerName,
-                    onValueChange = { onWinlator(winlator.copy(containerName = it)) },
-                )
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_graphics_driver_title),
-                    winlatorGraphicsDriverOptions(),
-                    winlator.graphicsDriver,
-                ) { onWinlator(winlator.copy(graphicsDriver = it)) }
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_dxwrapper_title),
-                    winlatorDxWrapperOptions(),
-                    winlator.dxwrapper,
-                ) { onWinlator(winlator.copy(dxwrapper = it)) }
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_screen_size_title),
-                    winlatorScreenSizeOptions(),
-                    winlator.screenSize,
-                ) { onWinlator(winlator.copy(screenSize = it)) }
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_lc_all_title),
-                    winlatorLcAllOptions(),
-                    winlator.lcAll,
-                ) { onWinlator(winlator.copy(lcAll = it)) }
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_tz_title),
-                    winlatorTimezoneOptions(),
-                    winlator.tz,
-                ) { onWinlator(winlator.copy(tz = it)) }
-                DropdownRow(
-                    stringResource(R.string.engine_settings_winlator_box64_preset_title),
-                    winlatorBox64PresetOptions(),
-                    winlator.box64Preset,
-                ) { onWinlator(winlator.copy(box64Preset = it)) }
-                SwitchPreference(
-                    title = stringResource(R.string.engine_settings_winlator_save_title),
-                    summary = stringResource(R.string.engine_settings_winlator_save_summary),
-                    checked = winlator.save,
-                    onCheckedChange = { onWinlator(winlator.copy(save = it)) },
-                )
-                Text(
-                    stringResource(R.string.engine_settings_winlator_note),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MiuixTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                )
-            }
-        }
-
         if (kind.graphicsFamily() != null) item { graphicsContent() }
         item { BottomInsetSpacer() }
     }

@@ -217,13 +217,8 @@ class GameSaveManager(private val context: Context) {
                     )
                 }
             }
-            // YU-RIS：存档固定在游戏目录 save/（经 Winlator 运行但落盘在游戏目录，可纳入统一存档管理）
-            EngineType.YURIS -> SaveLocation(
-                File(root, "save"),
-                text(R.string.save_location_engine_game_dir, game.engine.displayName),
-                true,
-            )
-            EngineType.UNKNOWN -> SaveLocation(null, text(R.string.save_location_unknown_unsupported), false)
+            EngineType.YURIS, EngineType.UNKNOWN ->
+                SaveLocation(null, text(R.string.save_location_unknown_unsupported), false)
         }
     }
 
