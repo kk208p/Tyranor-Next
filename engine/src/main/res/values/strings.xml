@@ -29,6 +29,8 @@
     <string name="engine_advhd_menu">菜单</string>
     <string name="engine_advhd_backlog">回想</string>
     <string name="engine_advhd_backlog_empty">还没有可回想的台词</string>
+    <string name="engine_advhd_auto_on">开启自动模式</string>
+    <string name="engine_advhd_auto_off">关闭自动模式</string>
     <string name="engine_advhd_load">读取进度</string>
     <string name="engine_advhd_saved">已保存</string>
     <string name="engine_advhd_save_failed">保存失败</string>

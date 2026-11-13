@@ -29,6 +29,8 @@
     <string name="engine_advhd_menu">メニュー</string>
     <string name="engine_advhd_backlog">バックログ</string>
     <string name="engine_advhd_backlog_empty">まだ振り返れる台詞がありません</string>
+    <string name="engine_advhd_auto_on">オートモードをオン</string>
+    <string name="engine_advhd_auto_off">オートモードをオフ</string>
     <string name="engine_advhd_load">ロード</string>
     <string name="engine_advhd_saved">セーブしました</string>
     <string name="engine_advhd_save_failed">セーブに失敗しました</string>

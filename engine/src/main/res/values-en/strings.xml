@@ -29,6 +29,8 @@
     <string name="engine_advhd_menu">Menu</string>
     <string name="engine_advhd_backlog">Backlog</string>
     <string name="engine_advhd_backlog_empty">No dialogue to show yet</string>
+    <string name="engine_advhd_auto_on">Enable auto mode</string>
+    <string name="engine_advhd_auto_off">Disable auto mode</string>
     <string name="engine_advhd_load">Load</string>
     <string name="engine_advhd_saved">Saved</string>
     <string name="engine_advhd_save_failed">Save failed</string>

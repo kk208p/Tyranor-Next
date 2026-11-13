@@ -25,7 +25,8 @@ uint64_t nextToken = 1;
 
 #define ADVHD_API_LIST(X) \
     X(abi_version) X(frame_width) X(frame_height) X(create_ex) X(destroy) \
-    X(set_font) X(load_translation) X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
+    X(set_font) X(load_translation) X(tick) X(set_text_speed) X(set_auto) \
+    X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
     X(choice_id) X(event_text) X(event_name) X(event_voice) X(last_error) \
     X(message_visible) X(history_count) X(history_text) X(frame) X(extract_asset) \
     X(save) X(load) X(is_dirty) X(invalidate) X(set_choice_overlay)
@@ -178,6 +179,24 @@ jint loadTranslation(JNIEnv* env, jclass, jlong token, jstring path) {
     std::lock_guard<std::mutex> guard(mutex);
     Session* s = session(token);
     return s ? api_load_translation(s->rt, p.c_str()) : -1;
+}
+
+jint tick(JNIEnv*, jclass, jlong token, jint deltaMs) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    return s ? static_cast<jint>(api_tick(s->rt, static_cast<uint32_t>(std::max(0, deltaMs)))) : 0;
+}
+
+void setTextSpeed(JNIEnv*, jclass, jlong token, jfloat cps) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (s) api_set_text_speed(s->rt, cps);
+}
+
+void setAuto(JNIEnv*, jclass, jlong token, jint enabled, jint delayMs) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (s) api_set_auto(s->rt, enabled, static_cast<uint32_t>(std::max(0, delayMs)));
 }
 
 jint advance(JNIEnv*, jclass, jlong token) {
@@ -378,6 +397,9 @@ JNINativeMethod methods[] = {
     {"create", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;I)J", reinterpret_cast<void*>(create)},
     {"lastCreateError", "()Ljava/lang/String;", reinterpret_cast<void*>(createError)},
     {"loadTranslation", "(JLjava/lang/String;)I", reinterpret_cast<void*>(loadTranslation)},
+    {"tick", "(JI)I", reinterpret_cast<void*>(tick)},
+    {"setTextSpeed", "(JF)V", reinterpret_cast<void*>(setTextSpeed)},
+    {"setAuto", "(JII)V", reinterpret_cast<void*>(setAuto)},
     {"destroy", "(J)V", reinterpret_cast<void*>(destroy)},
     {"advance", "(J)I", reinterpret_cast<void*>(advance)},
     {"pollEvent", "(J[J)I", reinterpret_cast<void*>(pollEvent)},

@@ -15,6 +15,10 @@ public final class NativeAdvhd {
     static native String lastCreateError();
     /** Load a community translation overlay (JSON name/choice/line maps). */
     static native int loadTranslation(long handle, String path);
+    /** Typewriter/auto timers; returns TICK_TEXT_DONE=1 / TICK_AUTO_DUE=2 bits. */
+    static native int tick(long handle, int deltaMs);
+    static native void setTextSpeed(long handle, float cps);
+    static native void setAuto(long handle, int enabled, int delayMs);
     static native void destroy(long handle);
 
     static native int advance(long handle);

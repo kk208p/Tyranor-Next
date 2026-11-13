@@ -86,6 +86,12 @@ public final class AdvhdActivity extends AppCompatActivity
     private boolean bgmWanted, resumed, destroyed, surfaceReady, frameScheduled;
     private boolean choicePending, processVerified;
     private long firstFrameLogged;
+    private long lastFrameNanos;
+    private boolean autoMode;
+    /** Last target volume applied to the BGM player (for fade-out ramps). */
+    private float bgmVolume = 1f;
+    /** advhd_tick flag: the auto-advance delay elapsed; host must advance. */
+    private static final int TICK_AUTO_DUE = 2;
 
     private static final class Payload {
         final String identity, root, user, font, nls, entry, translation;
@@ -261,6 +267,13 @@ public final class AdvhdActivity extends AppCompatActivity
             engine.execute(() -> {
                 long startedAt = System.nanoTime();
                 try {
+                    int deltaMs = lastFrameNanos == 0 ? 0
+                            : (int) Math.min(100, (frameTimeNanos - lastFrameNanos) / 1_000_000);
+                    lastFrameNanos = frameTimeNanos;
+                    int flags = NativeAdvhd.tick(handle, deltaMs);
+                    if ((flags & TICK_AUTO_DUE) != 0) {
+                        pollAndPost(); // auto-advance on the engine thread itself
+                    }
                     NativeAdvhd.frame(handle);
                     if (firstFrameLogged == 0) {
                         firstFrameLogged = Math.max(1, (System.nanoTime() - startedAt) / 1_000_000);
@@ -298,16 +311,19 @@ public final class AdvhdActivity extends AppCompatActivity
 
     private void advanceOnce() {
         if (handle == 0 || destroyed) return;
-        engine.execute(() -> {
-            int kind = NativeAdvhd.advance(handle);
-            long[] raw = new long[9];
-            NativeAdvhd.pollEvent(handle, raw);
-            String text = NativeAdvhd.eventText(handle);
-            String name = NativeAdvhd.eventName(handle);
-            String voiceFile = NativeAdvhd.eventVoice(handle);
-            String error = kind == EVENT_ERROR ? NativeAdvhd.lastError(handle) : "";
-            ui.post(() -> onEvent(kind, raw, text, name, voiceFile, error));
-        });
+        engine.execute(this::pollAndPost);
+    }
+
+    /** Engine thread: one advance + poll, then hand the event to the UI. */
+    private void pollAndPost() {
+        int kind = NativeAdvhd.advance(handle);
+        long[] raw = new long[9];
+        NativeAdvhd.pollEvent(handle, raw);
+        String text = NativeAdvhd.eventText(handle);
+        String name = NativeAdvhd.eventName(handle);
+        String voiceFile = NativeAdvhd.eventVoice(handle);
+        String error = kind == EVENT_ERROR ? NativeAdvhd.lastError(handle) : "";
+        ui.post(() -> onEvent(kind, raw, text, name, voiceFile, error));
     }
 
     private void onEvent(int kind, long[] raw, String text, String name, String voiceFile, String error) {
@@ -326,7 +342,9 @@ public final class AdvhdActivity extends AppCompatActivity
                 break;
             case EVENT_AUDIO:
                 onAudio((int) raw[1], name, text, (int) raw[3], raw[4] != 0,
-                        Float.intBitsToFloat((int) raw[7]));
+                        Float.intBitsToFloat((int) raw[7]),
+                        Float.intBitsToFloat((int) raw[5]),
+                        Float.intBitsToFloat((int) raw[6]));
                 break;
             case EVENT_MESSAGE:
                 break;
@@ -392,11 +410,12 @@ public final class AdvhdActivity extends AppCompatActivity
 
     // ---------- audio ----------
 
-    private void onAudio(int code, String channel, String file, int repeats, boolean isVoice, float volume) {
+    private void onAudio(int code, String channel, String file, int repeats, boolean isVoice,
+                         float volume, float fadeInSec, float fadeOutSec) {
         if (code == AUDIO_MUSIC) {
-            playMusic(file, repeats < 0, volume);
+            playMusic(file, repeats < 0, volume, fadeInSec, fadeOutSec);
         } else if (code == AUDIO_SOUND) {
-            playSound(file, isVoice, volume);
+            playSound(file, isVoice, volume, fadeInSec);
         } else if (code == AUDIO_STOP_MUSIC) {
             releaseBgm();
         } else if (code == AUDIO_STOP_SOUND) {
@@ -406,22 +425,74 @@ public final class AdvhdActivity extends AppCompatActivity
         }
     }
 
-    private void playMusic(String file, boolean loop, float volume) {
+    /** Ramp a player's volume; clamped to a sane window (engine values are seconds). */
+    private void rampVolume(MediaPlayer player, float from, float to, float seconds) {
+        int ms = Math.round(seconds * 1000f);
+        if (player == null || ms <= 0) {
+            try { player.setVolume(to, to); } catch (RuntimeException ignored) {}
+            return;
+        }
+        ms = Math.min(ms, 5000);
+        android.animation.ValueAnimator ani = android.animation.ValueAnimator.ofFloat(from, to);
+        ani.setDuration(ms);
+        ani.addUpdateListener(a -> {
+            float v = (float) a.getAnimatedValue();
+            try { player.setVolume(v, v); } catch (RuntimeException ignored) {}
+        });
+        ani.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator a0) {
+                try { player.setVolume(to, to); } catch (RuntimeException ignored) {}
+            }
+        });
+        ani.start();
+    }
+
+    private void playMusic(String file, boolean loop, float volume, float fadeInSec, float fadeOutSec) {
         if (file == null || file.isEmpty() || handle == 0) return;
         final String name = safeAudioName(file);
         engine.execute(() -> {
             String path = ensureAudio(name, file);
             if (path == null) return;
             ui.post(() -> {
-                releaseBgm();
-                bgm = createPlayer(path, loop, volume);
+                MediaPlayer old = bgm;
+                bgmPrepared = false;
+                bgm = null;
+                // Crossfade: the event carries both fades; the old BGM ramps out
+                // while the new one ramps in. No old player -> plain release.
+                if (old != null && fadeOutSec > 0.01f) {
+                    fadeOutAndRelease(old, fadeOutSec);
+                } else if (old != null) {
+                    try { old.release(); } catch (RuntimeException ignored) {}
+                }
+                bgm = createPlayer(path, loop, volume, fadeInSec);
                 bgmPath = path;
                 bgmWanted = true;
             });
         });
     }
 
-    private void playSound(String file, boolean isVoice, float volume) {
+    /** Fade a doomed player to silence, then release it off the UI thread. */
+    private void fadeOutAndRelease(MediaPlayer player, float seconds) {
+        int ms = Math.min(Math.round(seconds * 1000f), 5000);
+        if (ms <= 0) {
+            try { player.release(); } catch (RuntimeException ignored) {}
+            return;
+        }
+        android.animation.ValueAnimator ani = android.animation.ValueAnimator.ofFloat(bgmVolume, 0f);
+        ani.setDuration(ms);
+        ani.addUpdateListener(a -> {
+            float v = (float) a.getAnimatedValue();
+            try { player.setVolume(v, v); } catch (RuntimeException ignored) {}
+        });
+        ani.addListener(new android.animation.AnimatorListenerAdapter() {
+            @Override public void onAnimationEnd(android.animation.Animator a0) {
+                engine.execute(() -> { try { player.release(); } catch (RuntimeException ignored) {} });
+            }
+        });
+        ani.start();
+    }
+
+    private void playSound(String file, boolean isVoice, float volume, float fadeInSec) {
         if (file == null || file.isEmpty() || handle == 0) return;
         final String name = safeAudioName(file);
         engine.execute(() -> {
@@ -430,13 +501,13 @@ public final class AdvhdActivity extends AppCompatActivity
             ui.post(() -> {
                 if (isVoice) {
                     releaseVoice();
-                    voice = createPlayer(path, false, volume);
+                    voice = createPlayer(path, false, volume, fadeInSec);
                 } else {
                     if (effects.size() >= 8) {
                         MediaPlayer oldest = effects.remove(0);
                         try { oldest.release(); } catch (RuntimeException ignored) {}
                     }
-                    MediaPlayer player = createPlayer(path, false, volume);
+                    MediaPlayer player = createPlayer(path, false, volume, fadeInSec);
                     if (player != null) {
                         effects.add(player);
                         player.setOnCompletionListener(p -> {
@@ -578,7 +649,7 @@ public final class AdvhdActivity extends AppCompatActivity
         return out.toString();
     }
 
-    private MediaPlayer createPlayer(String path, boolean loop, float volume) {
+    private MediaPlayer createPlayer(String path, boolean loop, float volume, float fadeInSec) {
         try {
             MediaPlayer player = new MediaPlayer();
             player.setAudioAttributes(new AudioAttributes.Builder()
@@ -587,13 +658,28 @@ public final class AdvhdActivity extends AppCompatActivity
                     .build());
             player.setDataSource(path);
             player.setLooping(loop);
-            if (volume >= 0f && volume <= 1f) player.setVolume(volume, volume);
+            // The ABI maps an absent script volume to -1f; treat as full.
+            float target = (volume >= 0f && volume <= 1f) ? volume : 1f;
+            bgmVolume = target;
             player.setOnPreparedListener(p -> {
                 if (p == bgm) bgmPrepared = true;
                 if (resumed) {
                     try { p.start(); } catch (RuntimeException ignored) {}
                 }
             });
+            if (fadeInSec > 0.01f) {
+                // Engine fade values are seconds; ramp after the player starts.
+                player.setVolume(0f, 0f);
+                player.setOnPreparedListener(p -> {
+                    if (p == bgm) bgmPrepared = true;
+                    if (resumed) {
+                        try { p.start(); } catch (RuntimeException ignored) {}
+                        rampVolume(p, 0f, target, fadeInSec);
+                    }
+                });
+            } else {
+                player.setVolume(target, target);
+            }
             player.prepareAsync();
             return player;
         } catch (IOException | RuntimeException e) {
@@ -632,14 +718,25 @@ public final class AdvhdActivity extends AppCompatActivity
         showDialog(text(R.string.engine_prompt), "",
                 new String[]{
                         text(R.string.engine_advhd_resume),
+                        autoMode ? text(R.string.engine_advhd_auto_off)
+                                 : text(R.string.engine_advhd_auto_on),
                         text(R.string.engine_advhd_save),
                         text(R.string.engine_advhd_load),
                         text(R.string.engine_advhd_backlog),
                         text(R.string.engine_exit_game),
                 },
-                new Runnable[]{() -> {}, this::saveSlot, this::loadSlot, this::showBacklog,
-                        this::showExitConfirmation},
+                new Runnable[]{() -> {}, this::toggleAuto, this::saveSlot, this::loadSlot,
+                        this::showBacklog, this::showExitConfirmation},
                 () -> {});
+    }
+
+    /** Session-local auto mode; the runtime reveals text at 40 cps until then. */
+    private void toggleAuto() {
+        autoMode = !autoMode;
+        if (handle != 0) NativeAdvhd.setAuto(handle, autoMode ? 1 : 0, 1200);
+        Toast.makeText(this, autoMode ? R.string.engine_advhd_auto_on
+                                      : R.string.engine_advhd_auto_off,
+                Toast.LENGTH_SHORT).show();
     }
 
     /** Text history in a scrollable dialog (the VM keeps the last 300 lines). */
