@@ -26,6 +26,7 @@ uint64_t nextToken = 1;
 #define ADVHD_API_LIST(X) \
     X(abi_version) X(frame_width) X(frame_height) X(create_ex) X(destroy) \
     X(set_font) X(load_translation) X(tick) X(set_text_speed) X(set_auto) \
+    X(lua_trace) X(lua_probe) \
     X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
     X(choice_id) X(event_text) X(event_name) X(event_voice) X(last_error) \
     X(message_visible) X(history_count) X(history_text) X(frame) X(extract_asset) \
@@ -197,6 +198,29 @@ void setAuto(JNIEnv*, jclass, jlong token, jint enabled, jint delayMs) {
     std::lock_guard<std::mutex> guard(mutex);
     Session* s = session(token);
     if (s) api_set_auto(s->rt, enabled, static_cast<uint32_t>(std::max(0, delayMs)));
+}
+
+// Returns the instrumented Lua UI trace, or "" when the runtime has none
+// (non-Lua .so builds resolve this symbol too: the function just yields "").
+jstring luaTrace(JNIEnv* env, jclass, jlong token) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (!s) return env->NewStringUTF("");
+    int32_t need = api_lua_trace ? api_lua_trace(s->rt, nullptr, 0) : -1;
+    if (need <= 0) return env->NewStringUTF("");
+    std::vector<char> buf(static_cast<size_t>(need), 0);
+    api_lua_trace(s->rt, buf.data(), need);
+    buf.back() = 0;
+    return env->NewStringUTF(buf.data());
+}
+
+// Debug probe: boot the Lua UI host and evaluate a snippet (e.g. openTitle()).
+jint luaProbe(JNIEnv* env, jclass, jlong token, jstring code) {
+    std::string c;
+    if (!utf8(env, code, c, true)) return -1;
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    return s ? api_lua_probe(s->rt, c.c_str()) : -1;
 }
 
 jint advance(JNIEnv*, jclass, jlong token) {
@@ -400,6 +424,8 @@ JNINativeMethod methods[] = {
     {"tick", "(JI)I", reinterpret_cast<void*>(tick)},
     {"setTextSpeed", "(JF)V", reinterpret_cast<void*>(setTextSpeed)},
     {"setAuto", "(JII)V", reinterpret_cast<void*>(setAuto)},
+    {"luaTrace", "(J)Ljava/lang/String;", reinterpret_cast<void*>(luaTrace)},
+    {"luaProbe", "(JLjava/lang/String;)I", reinterpret_cast<void*>(luaProbe)},
     {"destroy", "(J)V", reinterpret_cast<void*>(destroy)},
     {"advance", "(J)I", reinterpret_cast<void*>(advance)},
     {"pollEvent", "(J[J)I", reinterpret_cast<void*>(pollEvent)},

@@ -53,6 +53,7 @@ public final class AdvhdActivity extends AppCompatActivity
     private static final int EVENT_SAY = 1;
     private static final int EVENT_CHOICE = 2;
     private static final int EVENT_AUDIO = 3;
+    private static final int EVENT_UI = 4;
     private static final int EVENT_MESSAGE = 5;
     private static final int EVENT_END = 6;
     private static final int EVENT_ERROR = 7;
@@ -187,6 +188,12 @@ public final class AdvhdActivity extends AppCompatActivity
         menuBackground.setCornerRadius(8 * getResources().getDisplayMetrics().density);
         menuButton.setBackground(menuBackground);
         menuButton.setOnClickListener(v -> showMenu());
+        // Debug affordance: long-press runs the Lua UI probe (boot the
+        // instrumented host, evaluate openTitle(), dump the native-API trace).
+        menuButton.setOnLongClickListener(v -> {
+            probeLua("openTitle()");
+            return true;
+        });
         FrameLayout.LayoutParams menuParams = new FrameLayout.LayoutParams(
                 (int) (44 * getResources().getDisplayMetrics().density),
                 (int) (44 * getResources().getDisplayMetrics().density),
@@ -241,6 +248,35 @@ public final class AdvhdActivity extends AppCompatActivity
         if (!payload.translation.isEmpty()) {
             int loaded = NativeAdvhd.loadTranslation(created, payload.translation);
             android.util.Log.i("AdvhdHost", "translation load rc=" + loaded);
+        }
+        // Debug hook: when the pref carries a Lua snippet (e.g. "openTitle()"),
+        // run it through the instrumented host right after boot and persist the
+        // trace to files/advhd/lua_trace.txt. Device experiments stay one launch
+        // away from evidence without any UI navigation.
+        String probeCode = getSharedPreferences("tyranor_prefs", MODE_PRIVATE)
+                .getString("advhd_lua_probe_code", "");
+        if (!probeCode.isEmpty()) {
+            engine.execute(() -> {
+                File out = new File(new File(getFilesDir(), "advhd"), "lua_trace.txt");
+                try {
+                    try (java.io.FileWriter w = new java.io.FileWriter(out, false)) {
+                        w.write("PROBE MARKER code=" + probeCode + "\n");
+                    }
+                } catch (IOException ignored) {
+                }
+                int n = NativeAdvhd.luaProbe(handle, probeCode);
+                String trace = NativeAdvhd.luaTrace(handle);
+                String body = trace == null ? "" : trace;
+                String summary = "probe code=" + probeCode + " rc=" + n + " lines="
+                        + (body.isEmpty() ? 0 : body.split("\n").length);
+                android.util.Log.i("AdvhdHost", "lua " + summary);
+                try {
+                    try (java.io.FileWriter w = new java.io.FileWriter(out, false)) {
+                        w.write(summary + "\n" + body);
+                    }
+                } catch (IOException ignored) {
+                }
+            });
         }
         android.util.Log.i("AdvhdHost", "create ms=" + ((System.nanoTime() - startedAt) / 1_000_000));
         ui.post(() -> {
@@ -347,6 +383,9 @@ public final class AdvhdActivity extends AppCompatActivity
                         Float.intBitsToFloat((int) raw[6]));
                 break;
             case EVENT_MESSAGE:
+                break;
+            case EVENT_UI:
+                logLuaTrace();
                 break;
             case EVENT_MOVIE:
                 if (raw[1] == MOVIE_STOP) {
@@ -723,10 +762,12 @@ public final class AdvhdActivity extends AppCompatActivity
                         text(R.string.engine_advhd_save),
                         text(R.string.engine_advhd_load),
                         text(R.string.engine_advhd_backlog),
+                        text(R.string.engine_advhd_lua_probe),
                         text(R.string.engine_exit_game),
                 },
                 new Runnable[]{() -> {}, this::toggleAuto, this::saveSlot, this::loadSlot,
-                        this::showBacklog, this::showExitConfirmation},
+                        this::showBacklog, () -> probeLua("openTitle()"),
+                        this::showExitConfirmation},
                 () -> {});
     }
 
@@ -737,6 +778,56 @@ public final class AdvhdActivity extends AppCompatActivity
         Toast.makeText(this, autoMode ? R.string.engine_advhd_auto_on
                                       : R.string.engine_advhd_auto_off,
                 Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * The runtime boots the instrumented Lua UI host on the first engine UI
+     * call (openTitle/openConfig/...); dump its trace so the native-API
+     * evidence lands in logcat. Bounded: summary + first 40 lines.
+     */
+    private void logLuaTrace() {
+        if (handle == 0 || destroyed) return;
+        engine.execute(() -> {
+            String trace = NativeAdvhd.luaTrace(handle);
+            if (trace == null || trace.isEmpty()) return;
+            String[] lines = trace.split("\n");
+            android.util.Log.i("AdvhdHost", "lua trace lines=" + lines.length);
+            int shown = Math.min(lines.length, 40);
+            for (int i = 0; i < shown; i++) {
+                android.util.Log.i("AdvhdHost", "lua[" + i + "] " + lines[i]);
+            }
+            if (lines.length > shown) {
+                android.util.Log.i("AdvhdHost", "lua ... " + (lines.length - shown) + " more");
+            }
+        });
+    }
+
+    /** Debug: evaluate a Lua snippet in the instrumented UI host, then show
+     * and persist the trace (logcat is unreliable on some vendor ROMs). */
+    private void probeLua(String code) {
+        if (handle == 0 || destroyed) return;
+        Toast.makeText(this, "Lua probe: " + code, Toast.LENGTH_SHORT).show();
+        engine.execute(() -> {
+            int n = NativeAdvhd.luaProbe(handle, code);
+            String trace = NativeAdvhd.luaTrace(handle);
+            String body = trace == null ? "" : trace;
+            String summary = "probe rc=" + n + " lines="
+                    + (body.isEmpty() ? 0 : body.split("\n").length);
+            android.util.Log.i("AdvhdHost", "lua " + summary);
+            try {
+                File out = new File(new File(getFilesDir(), "advhd"), "lua_trace.txt");
+                try (java.io.FileWriter w = new java.io.FileWriter(out)) {
+                    w.write(summary + "\n" + body);
+                }
+            } catch (IOException ignored) {
+            }
+            String dialogBody = body.length() > 6000
+                    ? body.substring(0, 6000) + "\n… (see files/advhd/lua_trace.txt)"
+                    : body;
+            ui.post(() -> showDialog("Lua UI trace", dialogBody.isEmpty() ? "(empty)"
+                    : dialogBody, new String[]{text(R.string.engine_ok)},
+                    new Runnable[]{() -> {}}, () -> {}));
+        });
     }
 
     /** Text history in a scrollable dialog (the VM keeps the last 300 lines). */

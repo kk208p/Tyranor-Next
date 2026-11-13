@@ -70,6 +70,11 @@ int32_t advhd_load_translation(AdvhdRuntime *rt, const char *path_utf8);
 uint32_t advhd_tick(AdvhdRuntime *rt, uint32_t delta_ms);
 void advhd_set_text_speed(AdvhdRuntime *rt, float cps);
 void advhd_set_auto(AdvhdRuntime *rt, int32_t enabled, uint32_t delay_ms);
+/* Lua UI instrumented trace (Lua-enabled .so variants; -1 when inactive). */
+int32_t advhd_lua_trace(AdvhdRuntime *rt, char *buf, int32_t cap);
+/* Lua UI probe: boot the host (idempotent), evaluate code, return trace
+ * length (-1 on boot failure). */
+int32_t advhd_lua_probe(AdvhdRuntime *rt, const char *code_utf8);
 int32_t advhd_advance(AdvhdRuntime *rt);
 int32_t advhd_poll_event(AdvhdRuntime *rt, AdvhdEventV2 *out);
 int32_t advhd_choose(AdvhdRuntime *rt, int32_t index);

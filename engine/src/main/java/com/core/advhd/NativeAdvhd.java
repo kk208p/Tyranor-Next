@@ -19,6 +19,10 @@ public final class NativeAdvhd {
     static native int tick(long handle, int deltaMs);
     static native void setTextSpeed(long handle, float cps);
     static native void setAuto(long handle, int enabled, int delayMs);
+    /** Instrumented Lua UI trace; "" when the runtime has no Lua session. */
+    static native String luaTrace(long handle);
+    /** Debug probe: boot the Lua host and evaluate a snippet. */
+    static native int luaProbe(long handle, String code);
     static native void destroy(long handle);
 
     static native int advance(long handle);
