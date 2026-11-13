@@ -27,7 +27,11 @@ engine/src/main/cpp/advhd_bridge.cpp                （JNI，Surface/GL 呈现�
 
 ## 设置
 
-- 全局/单游戏：文本编码（SJIS/GBK）、字体（私有 `files/fonts`）、入口脚本。
+- 全局/单游戏：文本编码（SJIS/GBK/Big5/UTF-8/UTF-16LE）、字体（私有 `files/fonts`）、入口脚本。
+- 翻译覆盖层（中文熟肉/机翻）：导入的 JSON 必须位于
+  `files/advhd/translations/*.json`（≤ 8 MiB），保存**路径**而不是副本；
+  运行时 `advhd_load_translation` 将其应用到台词、选项与回想。导入与文案校验
+  在设置页（全局 + 单游戏）完成，Launcher 预检阶段为 `TRANSLATION`。
 - 入口为空时运行时启发式：若 `start` 只做 `goto MAINMENU`/标题 UI，则优先
   `co_1_1` → `main_00` → `title`。
 - 字体为空时：游戏 `字体包/`、`font/`、`Font/` 或根目录的 TTF/OTF/TTC →
@@ -45,6 +49,7 @@ engine/src/main/cpp/advhd_bridge.cpp                （JNI，Surface/GL 呈现�
 | 回想 | 菜单「回想」显示最近 120 句，标记文本已清理（无 `%K%P`） |
 | 音频 | `bgm12.ogg` 1,634,125 B、SE 若干从 ARC 抽出并播放 |
 | 视频 | 根目录 `ED_KOH.dat`（WMV/ASF）经 IJK/FFmpeg 软解播放；点击可跳过并回到剧情 |
+| 翻译 | `hana-chr10-1.zh.json` 导入后真机 `translation load rc=0`；人名「女学生B」/台词中文；存读档回到原句仍为中文；回想中文 |
 | 退出 | 确认后 `:advhd` 进程结束、会话登记清除 |
 | 显示 | 16:9 等比缩放 + 黑边；RGBA_8888 缓冲保护（RGB_565 曾 SIGSEGV，已修） |
 

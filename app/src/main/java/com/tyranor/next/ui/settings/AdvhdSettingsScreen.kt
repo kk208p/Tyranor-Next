@@ -1,5 +1,6 @@
 package com.tyranor.next.ui.settings
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,7 +29,9 @@ import com.tyranor.next.theme.MiuixSettingsTheme
 import com.tyranor.next.theme.PageTextColor
 import com.tyranor.next.ui.common.AppSecondaryTopBar
 import com.tyranor.next.ui.common.TopBarIcon
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -36,6 +39,9 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 internal fun advhdNlsOptions(): List<Pair<String, String>> = listOf(
     EngineSettingsStore.ADVHD_NLS_SJIS to "SJIS / CP932",
     EngineSettingsStore.ADVHD_NLS_GBK to "GBK / CP936",
+    EngineSettingsStore.ADVHD_NLS_BIG5 to "Big5 / CP950",
+    EngineSettingsStore.ADVHD_NLS_UTF8 to "UTF-8",
+    EngineSettingsStore.ADVHD_NLS_UTF16LE to "UTF-16LE（ADVHD 2.1+）",
 )
 
 /**
@@ -49,7 +55,9 @@ internal fun AdvhdSettingsScreen() {
     val context = LocalContext.current
     var nls by remember { mutableStateOf(EngineSettingsStore.getAdvhdNls(context)) }
     var font by remember { mutableStateOf(EngineSettingsStore.getAdvhdFont(context)) }
+    var translation by remember { mutableStateOf(EngineSettingsStore.getAdvhdTranslation(context)) }
     var importingFont by remember { mutableStateOf(false) }
+    var importingTranslation by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null && !importingFont) {
@@ -64,6 +72,23 @@ internal fun AdvhdSettingsScreen() {
                     }
                 } finally {
                     importingFont = false
+                }
+            }
+        }
+    }
+    val translationPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && !importingTranslation) {
+            importingTranslation = true
+            scope.launch {
+                try {
+                    val imported = importTranslation(context, uri)
+                    if (imported != null) {
+                        translation = imported
+                    } else {
+                        Toast.makeText(context, R.string.advhd_error_translation, Toast.LENGTH_SHORT).show()
+                    }
+                } finally {
+                    importingTranslation = false
                 }
             }
         }
@@ -85,6 +110,7 @@ internal fun AdvhdSettingsScreen() {
                         ) {
                             EngineSettingsStore.setAdvhdNls(context, nls)
                             EngineSettingsStore.setAdvhdFont(context, font)
+                            EngineSettingsStore.setAdvhdTranslation(context, translation)
                             Toast.makeText(context, R.string.engine_settings_saved, Toast.LENGTH_SHORT).show()
                         }
                     },
@@ -106,6 +132,14 @@ internal fun AdvhdSettingsScreen() {
                             onPick = { if (!importingFont) picker.launch("*/*") },
                             enabled = !importingFont,
                         )
+                        FontPreference(
+                            label = stringResource(R.string.advhd_translation_title),
+                            value = translation.substringAfterLast('/').ifBlank { stringResource(R.string.advhd_translation_none) },
+                            followLabel = stringResource(R.string.advhd_translation_none),
+                            onFollow = { if (!importingTranslation) translation = "" },
+                            onPick = { if (!importingTranslation) translationPicker.launch("*/*") },
+                            enabled = !importingTranslation,
+                        )
                         Text(
                             stringResource(R.string.advhd_settings_note),
                             style = MaterialTheme.typography.bodyMedium,
@@ -117,3 +151,30 @@ internal fun AdvhdSettingsScreen() {
         }
     }
 }
+
+/** Import a translation JSON into files/advhd/translations, validating size and JSON shape. */
+internal suspend fun importTranslation(context: android.content.Context, uri: Uri): String? =
+    withContext(Dispatchers.IO) {
+        try {
+            val raw = uri.lastPathSegment ?: "translation.json"
+            val base = raw.substringAfterLast('/').substringAfterLast('\\')
+            val name = base.replace(Regex("[^A-Za-z0-9._-]"), "_").ifBlank { "translation.json" }
+            val fileName = if (name.endsWith(".json", ignoreCase = true)) name else "$name.json"
+            val dir = java.io.File(context.filesDir, "advhd/translations").apply { mkdirs() }
+            val canonicalDir = dir.canonicalFile
+            val target = java.io.File(canonicalDir, fileName)
+            if (target.canonicalFile.parentFile != canonicalDir) return@withContext null
+            val input = context.contentResolver.openInputStream(uri) ?: return@withContext null
+            input.use { source ->
+                target.outputStream().use { sink -> source.copyTo(sink) }
+            }
+            if (target.length() == 0L || target.length() > 8L * 1024 * 1024) {
+                target.delete()
+                return@withContext null
+            }
+            org.json.JSONObject(target.readText()) // reject malformed JSON before it reaches the runtime
+            target.absolutePath
+        } catch (_: Exception) {
+            null
+        }
+    }

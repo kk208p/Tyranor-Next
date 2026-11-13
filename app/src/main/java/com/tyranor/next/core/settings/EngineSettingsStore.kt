@@ -73,6 +73,7 @@ object EngineSettingsStore {
     const val KEY_ADVHD_NLS = "advhd_nls"
     const val KEY_ADVHD_FONT = "advhd_font"
     const val KEY_ADVHD_ENTRY = "advhd_entry"
+    const val KEY_ADVHD_TRANSLATION = "advhd_translation"
     const val KEY_FVP_SYSTEM_FONT = "fvp_system_font"
     const val KEY_FVP_TEXT_HIDPI = "fvp_text_hidpi"
     const val KEY_FVP_FONT = "fvp_font"
@@ -358,7 +359,16 @@ object EngineSettingsStore {
     // AdvHD 与 Ethornell 同为字节级文本编码；默认 SJIS，汉化补丁可切 GBK
     const val ADVHD_NLS_SJIS = "sjis"
     const val ADVHD_NLS_GBK = "gbk"
-    val ADVHD_NLS_VALUES: Set<String> = linkedSetOf(ADVHD_NLS_SJIS, ADVHD_NLS_GBK)
+    const val ADVHD_NLS_BIG5 = "big5"
+    const val ADVHD_NLS_UTF8 = "utf8"
+    const val ADVHD_NLS_UTF16LE = "utf16le"
+    val ADVHD_NLS_VALUES: Set<String> = linkedSetOf(
+        ADVHD_NLS_SJIS,
+        ADVHD_NLS_GBK,
+        ADVHD_NLS_BIG5,
+        ADVHD_NLS_UTF8,
+        ADVHD_NLS_UTF16LE,
+    )
     const val FVP_NLS_GBK = "gbk"
     const val FVP_NLS_UTF8 = "utf8"
     val FVP_NLS_VALUES: Set<String> = linkedSetOf(
@@ -827,6 +837,8 @@ object EngineSettingsStore {
     fun setAdvhdFont(c: Context, value: String) = prefs(c).edit().putString(KEY_ADVHD_FONT, value.trim()).apply()
     fun getAdvhdEntry(c: Context): String = prefs(c).getString(KEY_ADVHD_ENTRY, "").orEmpty()
     fun setAdvhdEntry(c: Context, value: String) = prefs(c).edit().putString(KEY_ADVHD_ENTRY, value.trim().lowercase(java.util.Locale.ROOT)).apply()
+    fun getAdvhdTranslation(c: Context): String = prefs(c).getString(KEY_ADVHD_TRANSLATION, "").orEmpty()
+    fun setAdvhdTranslation(c: Context, value: String) = prefs(c).edit().putString(KEY_ADVHD_TRANSLATION, value.trim()).apply()
 
     // ---------- FVP ----------
     fun getFvpNls(c: Context): String =

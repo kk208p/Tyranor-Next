@@ -33,6 +33,20 @@ public final class AdvhdPaths {
         }
     }
 
+    /** Optional translation overlay must live under the private translation root. */
+    public static String validatedTranslation(File filesDir, String suppliedPath) throws IOException {
+        if (suppliedPath == null || suppliedPath.trim().isEmpty()) return "";
+        if (suppliedPath.indexOf('\0') >= 0 || suppliedPath.length() > 8192) throw new IOException("Invalid translation path");
+        File root = new File(new File(filesDir.getCanonicalFile(), "advhd"), "translations").getCanonicalFile();
+        File file = new File(suppliedPath).getCanonicalFile();
+        if (!file.toPath().startsWith(root.toPath()) || !file.isFile() || !file.canRead()
+                || file.length() == 0 || file.length() > 8L * 1024 * 1024
+                || !file.getName().toLowerCase(java.util.Locale.ROOT).endsWith(".json")) {
+            throw new IOException("Translation policy");
+        }
+        return file.getAbsolutePath();
+    }
+
     /** Exact spelling and canonical destination must both match; no aliases or symlink redirection. */
     public static File validateUserDataDir(File filesDir, String gameIdentity, String suppliedPath) throws IOException {
         if (suppliedPath == null || suppliedPath.indexOf('\0') >= 0 || suppliedPath.length() > 8192)

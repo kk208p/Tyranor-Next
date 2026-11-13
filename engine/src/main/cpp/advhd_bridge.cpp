@@ -25,7 +25,7 @@ uint64_t nextToken = 1;
 
 #define ADVHD_API_LIST(X) \
     X(abi_version) X(frame_width) X(frame_height) X(create_ex) X(destroy) \
-    X(set_font) X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
+    X(set_font) X(load_translation) X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
     X(choice_id) X(event_text) X(event_name) X(event_voice) X(last_error) \
     X(message_visible) X(history_count) X(history_text) X(frame) X(extract_asset) \
     X(save) X(load) X(is_dirty) X(invalidate) X(set_choice_overlay)
@@ -170,6 +170,14 @@ void destroy(JNIEnv*, jclass, jlong token) {
     if (it->second.window) ANativeWindow_release(it->second.window);
     api_destroy(it->second.rt);
     sessions.erase(it);
+}
+
+jint loadTranslation(JNIEnv* env, jclass, jlong token, jstring path) {
+    std::string p;
+    if (!utf8(env, path, p, true)) return -1;
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    return s ? api_load_translation(s->rt, p.c_str()) : -1;
 }
 
 jint advance(JNIEnv*, jclass, jlong token) {
@@ -369,6 +377,7 @@ jint nativeHeight(JNIEnv*, jclass) { return static_cast<jint>(api_frame_height()
 JNINativeMethod methods[] = {
     {"create", "(Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;I)J", reinterpret_cast<void*>(create)},
     {"lastCreateError", "()Ljava/lang/String;", reinterpret_cast<void*>(createError)},
+    {"loadTranslation", "(JLjava/lang/String;)I", reinterpret_cast<void*>(loadTranslation)},
     {"destroy", "(J)V", reinterpret_cast<void*>(destroy)},
     {"advance", "(J)I", reinterpret_cast<void*>(advance)},
     {"pollEvent", "(J[J)I", reinterpret_cast<void*>(pollEvent)},

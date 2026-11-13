@@ -149,7 +149,7 @@ object LaunchContract {
 
     // ---------- AdvHD (WillPlus ADVプレイヤHD) ----------
 
-    /** Text encoding: sjis (default) or gbk. */
+    /** Text encoding: sjis (default) / gbk / big5 / utf8 / utf16le (ADVHD 2.1+). */
     const val ADVHD_NLS = "ADVHD_NLS"
     /** Optional imported font inside the app-private files/fonts directory. */
     const val ADVHD_FONT_PATH = "ADVHD_FONT_PATH"
@@ -157,6 +157,8 @@ object LaunchContract {
     const val ADVHD_USER_DATA_DIR = "ADVHD_USER_DATA_DIR"
     /** Entry script override; empty = runtime heuristic (story entry over a title/boot script). */
     const val ADVHD_ENTRY = "ADVHD_ENTRY"
+    /** Optional community translation overlay (JSON name/choice/line maps). */
+    const val ADVHD_TRANSLATION = "ADVHD_TRANSLATION"
 
     // ---------- System35 (xsystem35) ----------
 

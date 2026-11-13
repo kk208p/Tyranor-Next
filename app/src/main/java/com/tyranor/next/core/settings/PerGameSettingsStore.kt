@@ -129,6 +129,7 @@ object PerGameSettingsStore {
     const val F_ADVHD_NLS = "advhd_nls"
     const val F_ADVHD_FONT = "advhd_font"
     const val F_ADVHD_ENTRY = "advhd_entry"
+    const val F_ADVHD_TRANSLATION = "advhd_translation"
     const val F_CMVS_FONT = "cmvs_font"
     const val F_SYSTEMNNN_FULLSCREEN = "systemnnn_fullscreen"
     const val F_SYSTEMNNN_READING_SIZE = "systemnnn_reading_size"

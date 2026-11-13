@@ -64,6 +64,7 @@ uint32_t advhd_frame_width(void);
 uint32_t advhd_frame_height(void);
 
 int32_t advhd_set_font(AdvhdRuntime *rt, const char *path_utf8, uint32_t font_index);
+int32_t advhd_load_translation(AdvhdRuntime *rt, const char *path_utf8);
 int32_t advhd_advance(AdvhdRuntime *rt);
 int32_t advhd_poll_event(AdvhdRuntime *rt, AdvhdEventV2 *out);
 int32_t advhd_choose(AdvhdRuntime *rt, int32_t index);

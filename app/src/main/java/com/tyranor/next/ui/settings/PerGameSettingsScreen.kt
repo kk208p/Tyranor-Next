@@ -169,6 +169,7 @@ fun PerGameSettingsScreen(game: ScanGame) {
     var advhdNls by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_NLS)) }
     var advhdFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_FONT)) }
     var advhdEntry by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_ENTRY)) }
+    var advhdTranslation by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_TRANSLATION)) }
     var cmvsFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_CMVS_FONT)) }
     var fvpSystemFont by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT)) }
     var fvpTextHidpi by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI)) }
@@ -362,6 +363,17 @@ fun PerGameSettingsScreen(game: ScanGame) {
                 try {
                     val path = FontImport.importToPrivate(ctx, uri)
                     if (path != null) ethornellFont = path else AppNotice.makeText(ctx, R.string.ethornell_error_font, android.widget.Toast.LENGTH_SHORT).show()
+                } finally { importingFont = false }
+            }
+        }
+    }
+    val advhdTranslationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && !importingFont) {
+            importingFont = true
+            scope.launch {
+                try {
+                    val path = importTranslation(ctx, uri)
+                    if (path != null) advhdTranslation = path else android.widget.Toast.makeText(ctx, R.string.advhd_error_translation, android.widget.Toast.LENGTH_SHORT).show()
                 } finally { importingFont = false }
             }
         }
@@ -622,6 +634,7 @@ fun PerGameSettingsScreen(game: ScanGame) {
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_NLS, advhdNls)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_FONT, advhdFont)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_ENTRY, advhdEntry)
+        PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_TRANSLATION, advhdTranslation)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_CMVS_FONT, cmvsFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT, fvpSystemFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI, fvpTextHidpi)
@@ -1274,6 +1287,15 @@ fun PerGameSettingsScreen(game: ScanGame) {
                                 followGameDefaultLabel = stringResource(R.string.advhd_font_default),
                                 onSet = { advhdFont = it },
                                 onPick = { if (!importingFont) advhdFontLauncher.launch("*/*") },
+                                enabled = !importingFont,
+                            )
+                            OverrideFontPreference(
+                                label = stringResource(R.string.advhd_translation_title),
+                                globalValue = EngineSettingsStore.getAdvhdTranslation(ctx),
+                                override = advhdTranslation,
+                                followGameDefaultLabel = stringResource(R.string.advhd_translation_none),
+                                onSet = { advhdTranslation = it },
+                                onPick = { if (!importingFont) advhdTranslationLauncher.launch("*/*") },
                                 enabled = !importingFont,
                             )
                             OverrideText(

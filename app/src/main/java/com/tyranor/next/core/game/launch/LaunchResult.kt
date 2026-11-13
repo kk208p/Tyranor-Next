@@ -27,7 +27,7 @@ enum class MirrorPrepareStage {
 enum class EthornellPrepareError { RESOURCE_ROOT, BOOTSTRAP, FONT, USER_DATA, SESSION_BUSY }
 
 /** AdvHD 启动预检阶段；文案由 UI 映射。 */
-enum class AdvhdPrepareError { RESOURCE_ROOT, BOOTSTRAP, FONT, USER_DATA, SESSION_BUSY }
+enum class AdvhdPrepareError { RESOURCE_ROOT, BOOTSTRAP, FONT, USER_DATA, TRANSLATION, SESSION_BUSY }
 enum class SystemNnnResourceError { SOURCE_MISSING, STORAGE_RESTRICTED, INVALID_SOURCE, SOURCE_BUSY, CORRUPT_COPY, SAVE_NOT_WRITABLE }
 
 /**

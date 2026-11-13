@@ -88,7 +88,7 @@ public final class AdvhdActivity extends AppCompatActivity
     private long firstFrameLogged;
 
     private static final class Payload {
-        final String identity, root, user, font, nls, entry;
+        final String identity, root, user, font, nls, entry, translation;
 
         Payload(Intent intent, File filesDir) throws IOException {
             if (intent == null || !LaunchContract.LAUNCH_MODE_ADVHD.equals(
@@ -101,7 +101,10 @@ public final class AdvhdActivity extends AppCompatActivity
             AdvhdPaths.validateUserDataDir(filesDir, identity, user);
             String selected = intent.getStringExtra(LaunchContract.ADVHD_NLS);
             nls = selected == null ? "sjis" : selected;
-            if (!nls.equals("sjis") && !nls.equals("gbk")) throw new IllegalArgumentException("encoding");
+            if (!nls.equals("sjis") && !nls.equals("gbk") && !nls.equals("big5")
+                    && !nls.equals("utf8") && !nls.equals("utf16le")) {
+                throw new IllegalArgumentException("encoding");
+            }
             String selectedFont = intent.getStringExtra(LaunchContract.ADVHD_FONT_PATH);
             font = selectedFont == null ? "" : selectedFont;
             if (font.length() > 8192 || font.indexOf('\0') >= 0) throw new IllegalArgumentException("font");
@@ -109,6 +112,15 @@ public final class AdvhdActivity extends AppCompatActivity
             entry = selectedEntry == null ? "" : selectedEntry.trim().toLowerCase(java.util.Locale.ROOT);
             if (entry.length() > 128 || !entry.matches("[a-z0-9_.\\-]*")) {
                 throw new IllegalArgumentException("entry");
+            }
+            String selectedTranslation = intent.getStringExtra(LaunchContract.ADVHD_TRANSLATION);
+            translation = selectedTranslation == null ? "" : selectedTranslation;
+            if (!translation.isEmpty()) {
+                File root = new File(new File(filesDir, "advhd"), "translations").getCanonicalFile();
+                File file = new File(translation).getCanonicalFile();
+                if (!file.toPath().startsWith(root.toPath()) || !file.isFile() || !file.canRead()) {
+                    throw new IllegalArgumentException("translation");
+                }
             }
         }
 
@@ -203,7 +215,14 @@ public final class AdvhdActivity extends AppCompatActivity
     }
 
     private void createRuntime() {
-        int encoding = payload.nls.equals("gbk") ? 1 : 0;
+        int encoding;
+        switch (payload.nls) {
+            case "gbk": encoding = 1; break;
+            case "big5": encoding = 2; break;
+            case "utf8": encoding = 3; break;
+            case "utf16le": encoding = 4; break;
+            default: encoding = 0; break;
+        }
         long startedAt = System.nanoTime();
         long created = NativeAdvhd.create(payload.root, payload.entry, encoding, payload.font, 0);
         if (created == 0) {
@@ -213,6 +232,10 @@ public final class AdvhdActivity extends AppCompatActivity
         }
         handle = created;
         NativeAdvhd.setChoiceOverlay(created, 0);
+        if (!payload.translation.isEmpty()) {
+            int loaded = NativeAdvhd.loadTranslation(created, payload.translation);
+            android.util.Log.i("AdvhdHost", "translation load rc=" + loaded);
+        }
         android.util.Log.i("AdvhdHost", "create ms=" + ((System.nanoTime() - startedAt) / 1_000_000));
         ui.post(() -> {
             if (destroyed) return;

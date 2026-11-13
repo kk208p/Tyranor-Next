@@ -13,6 +13,8 @@ public final class NativeAdvhd {
     static native long create(String resourceRoot, String entry, int encoding,
                               String fontPath, int fontIndex);
     static native String lastCreateError();
+    /** Load a community translation overlay (JSON name/choice/line maps). */
+    static native int loadTranslation(long handle, String path);
     static native void destroy(long handle);
 
     static native int advance(long handle);

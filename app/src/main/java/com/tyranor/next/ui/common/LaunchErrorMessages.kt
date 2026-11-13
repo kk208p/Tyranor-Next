@@ -53,6 +53,7 @@ private fun LaunchResult.Failure.toUserMessage(context: Context): String {
             AdvhdPrepareError.BOOTSTRAP -> R.string.advhd_error_bootstrap
             AdvhdPrepareError.FONT -> R.string.advhd_error_font
             AdvhdPrepareError.USER_DATA -> R.string.advhd_error_userdata
+            AdvhdPrepareError.TRANSLATION -> R.string.advhd_error_translation
             AdvhdPrepareError.SESSION_BUSY -> R.string.advhd_error_session_busy
         })
 

@@ -1040,10 +1040,13 @@
     <string name="advhd_font_default">System CJK font</string>
     <string name="advhd_entry_title">Entry script</string>
     <string name="advhd_entry_hint">Empty = auto (skip title/boot-only scripts)</string>
+    <string name="advhd_translation_title">Translation file</string>
+    <string name="advhd_translation_none">No translation</string>
     <string name="advhd_settings_note">Text is drawn by the built-in renderer. For community GBK patches switch the encoding to GBK and pick a CJK font; with no entry script the runtime skips scripts that only jump to MAINMENU.</string>
     <string name="advhd_error_font">Font import failed</string>
     <string name="advhd_error_root">Game directory is not readable (All files access required)</string>
     <string name="advhd_error_bootstrap">No AdvHD ARC/ws2 bootstrap evidence found</string>
+    <string name="advhd_error_translation">Invalid translation file (JSON under the private translations directory)</string>
     <string name="advhd_error_userdata">Cannot create the private AdvHD user directory</string>
     <string name="advhd_error_session_busy">Another AdvHD game is running</string>
     <string name="ethornell_error_session_busy">Ethornell is running another game, or its session is starting or closing. Exit the current game before trying again.</string>

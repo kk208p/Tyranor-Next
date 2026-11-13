@@ -240,6 +240,10 @@ object EngineSettingsResolver {
                 str(PerGameSettingsStore.F_ADVHD_ENTRY),
                 EngineSettingsStore.getAdvhdEntry(app),
             ),
+            advhdTranslation = EffectiveEngineSettings.resolve(
+                str(PerGameSettingsStore.F_ADVHD_TRANSLATION),
+                EngineSettingsStore.getAdvhdTranslation(app),
+            ),
             cmvsFont = EffectiveEngineSettings.resolve(
                 str(PerGameSettingsStore.F_CMVS_FONT),
                 EngineSettingsStore.getCmvsFont(app),
@@ -405,6 +409,8 @@ data class ResolvedEngineSettings(
     val advhdFont: String,
     /** AdvHD 入口脚本（空 = 运行时启发式：跳过纯标题/启动脚本）。 */
     val advhdEntry: String,
+    /** AdvHD 翻译覆盖层 JSON 绝对路径（空 = 原文）。 */
+    val advhdTranslation: String,
     /** CMVS 字体绝对路径（空 = 未选择，启动预检失败）。 */
     val cmvsFont: String,
     /** CMVS 字体集合索引。 */

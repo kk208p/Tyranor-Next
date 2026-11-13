@@ -1724,6 +1724,8 @@ object EngineLauncher {
             if (EthornellPaths.validatedFont(context.filesDir, settings.advhdFont) == null) {
                 return failed(AdvhdPrepareError.FONT)
             }
+            stage = AdvhdPrepareError.TRANSLATION
+            AdvhdPaths.validatedTranslation(context.filesDir, settings.advhdTranslation)
             stage = AdvhdPrepareError.USER_DATA
             val dir = AdvhdPaths.userDataDir(context.filesDir, game.uri)
             AdvhdPaths.validateUserDataDir(context.filesDir, game.uri, dir.absolutePath)
@@ -1752,6 +1754,14 @@ object EngineLauncher {
         putExtra(LaunchContract.ADVHD_FONT_PATH, EthornellPaths.validatedFont(context.filesDir, settings.advhdFont))
         putExtra(LaunchContract.ADVHD_USER_DATA_DIR, AdvhdPaths.userDataDir(context.filesDir, game.uri).absolutePath)
         putExtra(LaunchContract.ADVHD_ENTRY, settings.advhdEntry)
+        putExtra(
+            LaunchContract.ADVHD_TRANSLATION,
+            try {
+                AdvhdPaths.validatedTranslation(context.filesDir, settings.advhdTranslation)
+            } catch (_: java.io.IOException) {
+                ""
+            },
+        )
         putExtra(
             LaunchContract.UI_LANGUAGE_TAG,
             com.tyranor.next.core.i18n.AppLocaleController.wrap(context).resources.configuration.locales[0].toLanguageTag(),
