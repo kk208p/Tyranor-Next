@@ -51,6 +51,9 @@ engine/src/main/cpp/advhd_bridge.cpp                （JNI，Surface/GL 呈现�
 | 视频 | 根目录 `ED_KOH.dat`（WMV/ASF）经 IJK/FFmpeg 软解播放；点击可跳过并回到剧情 |
 | 翻译 | `hana-chr10-1.zh.json` 导入后真机 `translation load rc=0`；人名「女学生B」/台词中文；存读档回到原句仍为中文；回想中文 |
 | 退出 | 确认后 `:advhd` 进程结束、会话登记清除 |
+| 打字机 | 逐字显现（默认 40 cps，`advhd_set_text_speed` 可调）；首 tap 补全本句、再 tap 推进（真机中间帧截图验证） |
+| 自动模式 | 菜单「开启/关闭自动模式」（会话内有效，句完 1.2s 自动推进，不越过待选项）；真机零输入自走多事件 |
+| 音频淡变 | `AUDIO` 事件的 fade_in/fade_out（秒）接入 MediaPlayer：播放淡入、PlayMusic 双值=旧 BGM 淡出+新 BGM 淡入交叉；`StopMusic(0x1F)` 事件无 fade 数据，维持立即停止 |
 | 显示 | 16:9 等比缩放 + 黑边；RGBA_8888 缓冲保护（RGB_565 曾 SIGSEGV，已修） |
 
 ## 已知限制（v1）
@@ -60,7 +63,10 @@ engine/src/main/cpp/advhd_bridge.cpp                （JNI，Surface/GL 呈现�
 - E-mote 动态立绘、`.fx` 着色器未接入；视频已通过 IJK 软解接入（依赖 `PACK_IJK`，WMV/ASF 由 FFmpeg 解码）。
 - 图层：位置/缩放/颜色/加色混合/PNA 部件/遮罩已实现；旋转、
   淡入淡出动画、`postprocess` 仍未渲染。
-- 文本无逐字打字机、无自动/跳过模式（backlog 已提供）。
+- 文本打字机/自动模式已接入（`advhd_tick/set_text_speed/set_auto`）；
+  「跳过」目前=宿主连点推进，已读跳过（read flags）未实现。
+- 音频：Stop 类事件无 fade 数据（ws2 0x1F/0x29 只解析通道）；通道级音量调节
+  opcode（0x20/0x2A）在 VM 中仍为记账位（M3 计划）。
 - 读档会恢复保存时的台词与画面，但不会回滚到该句的“输入前”状态。
 - PC 原版存档互通未做；TYN 存档管理/WebDAV 不覆盖 AdvHD。
 
