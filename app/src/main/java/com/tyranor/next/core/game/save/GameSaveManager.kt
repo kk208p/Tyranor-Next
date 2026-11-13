@@ -412,6 +412,12 @@ class GameSaveManager(private val context: Context) {
                     )
                 }
             }
+            // AdvHD v1 使用引擎内菜单的私有 JSON 槽位，未接入 TYN 存档管理
+            EngineType.ADVHD -> SaveLocation(
+                null,
+                R.string.save_location_unknown_unsupported,
+                false,
+            )
             // YU-RIS：存档固定在游戏目录 save/（经 Winlator 运行但落盘在游戏目录，可纳入统一存档管理）
             EngineType.YURIS -> SaveLocation(
                 File(root, "save"),

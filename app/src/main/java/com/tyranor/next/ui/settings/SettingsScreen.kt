@@ -889,6 +889,10 @@ internal fun EngineSettingsDetailScreen(kind: EngineSettingsKind) {
         EthornellSettingsScreen()
         return
     }
+    if (kind == EngineSettingsKind.ADVHD) {
+        AdvhdSettingsScreen()
+        return
+    }
     if (kind == EngineSettingsKind.RUFFLE) {
         RuffleSettingsScreen()
         return

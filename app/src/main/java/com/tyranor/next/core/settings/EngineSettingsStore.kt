@@ -70,6 +70,9 @@ object EngineSettingsStore {
     const val KEY_FVP_NLS = "fvp_nls"
     const val KEY_ETHORNELL_NLS = "ethornell_nls"
     const val KEY_ETHORNELL_FONT = "ethornell_font"
+    const val KEY_ADVHD_NLS = "advhd_nls"
+    const val KEY_ADVHD_FONT = "advhd_font"
+    const val KEY_ADVHD_ENTRY = "advhd_entry"
     const val KEY_FVP_SYSTEM_FONT = "fvp_system_font"
     const val KEY_FVP_TEXT_HIDPI = "fvp_text_hidpi"
     const val KEY_FVP_FONT = "fvp_font"
@@ -352,6 +355,10 @@ object EngineSettingsStore {
     const val ETHORNELL_NLS_SJIS = "sjis"
     const val ETHORNELL_NLS_GBK = "gbk"
     val ETHORNELL_NLS_VALUES: Set<String> = linkedSetOf(ETHORNELL_NLS_SJIS, ETHORNELL_NLS_GBK)
+    // AdvHD 与 Ethornell 同为字节级文本编码；默认 SJIS，汉化补丁可切 GBK
+    const val ADVHD_NLS_SJIS = "sjis"
+    const val ADVHD_NLS_GBK = "gbk"
+    val ADVHD_NLS_VALUES: Set<String> = linkedSetOf(ADVHD_NLS_SJIS, ADVHD_NLS_GBK)
     const val FVP_NLS_GBK = "gbk"
     const val FVP_NLS_UTF8 = "utf8"
     val FVP_NLS_VALUES: Set<String> = linkedSetOf(
@@ -808,6 +815,18 @@ object EngineSettingsStore {
         value?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf { it in ETHORNELL_NLS_VALUES } ?: ETHORNELL_NLS_SJIS
     fun getEthornellFont(c: Context): String = prefs(c).getString(KEY_ETHORNELL_FONT, "").orEmpty()
     fun setEthornellFont(c: Context, value: String) = prefs(c).edit().putString(KEY_ETHORNELL_FONT, value.trim()).apply()
+
+    // ---------- AdvHD ----------
+    fun getAdvhdNls(c: Context): String =
+        normalizeAdvhdNls(prefs(c).getString(KEY_ADVHD_NLS, ADVHD_NLS_SJIS))
+    fun setAdvhdNls(c: Context, value: String) =
+        prefs(c).edit().putString(KEY_ADVHD_NLS, normalizeAdvhdNls(value)).apply()
+    fun normalizeAdvhdNls(value: String?): String =
+        value?.trim()?.lowercase(java.util.Locale.ROOT)?.takeIf { it in ADVHD_NLS_VALUES } ?: ADVHD_NLS_SJIS
+    fun getAdvhdFont(c: Context): String = prefs(c).getString(KEY_ADVHD_FONT, "").orEmpty()
+    fun setAdvhdFont(c: Context, value: String) = prefs(c).edit().putString(KEY_ADVHD_FONT, value.trim()).apply()
+    fun getAdvhdEntry(c: Context): String = prefs(c).getString(KEY_ADVHD_ENTRY, "").orEmpty()
+    fun setAdvhdEntry(c: Context, value: String) = prefs(c).edit().putString(KEY_ADVHD_ENTRY, value.trim().lowercase(java.util.Locale.ROOT)).apply()
 
     // ---------- FVP ----------
     fun getFvpNls(c: Context): String =

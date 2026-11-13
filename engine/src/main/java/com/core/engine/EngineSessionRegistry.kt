@@ -18,11 +18,12 @@ object EngineSessionRegistry {
     const val HOST_TYRANO = "tyrano"
     const val HOST_RPGMAKER = "rpgmaker"
     const val HOST_ETHORNELL = "ethornell"
+    const val HOST_ADVHD = "advhd"
 
     /** Conservative cross-process liveness, scoped to our UID and exact host process name. */
     @JvmStatic
     fun isHostAlive(context: Context, host: String): Boolean {
-        if (host !in setOf(HOST_TYRANO, HOST_RPGMAKER, HOST_ETHORNELL)) return false
+        if (host !in setOf(HOST_TYRANO, HOST_RPGMAKER, HOST_ETHORNELL, HOST_ADVHD)) return false
         return runCatching {
             val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as? android.app.ActivityManager
                 ?: return@runCatching false

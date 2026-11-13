@@ -147,6 +147,17 @@ object LaunchContract {
     /** Durable one-shot launch dispatch lease; issued/claimed through EthornellDispatchRegistry. */
     const val ETHORNELL_DISPATCH_TOKEN = "ETHORNELL_DISPATCH_TOKEN"
 
+    // ---------- AdvHD (WillPlus ADVプレイヤHD) ----------
+
+    /** Text encoding: sjis (default) or gbk. */
+    const val ADVHD_NLS = "ADVHD_NLS"
+    /** Optional imported font inside the app-private files/fonts directory. */
+    const val ADVHD_FONT_PATH = "ADVHD_FONT_PATH"
+    /** Explicit private writable user root (saves/audio cache), separate from the game root. */
+    const val ADVHD_USER_DATA_DIR = "ADVHD_USER_DATA_DIR"
+    /** Entry script override; empty = runtime heuristic (story entry over a title/boot script). */
+    const val ADVHD_ENTRY = "ADVHD_ENTRY"
+
     // ---------- System35 (xsystem35) ----------
 
     /** 生效存档目录**绝对路径**（由 App 按「独立存档开关」解析，禁止宿主自行推导）。 */
@@ -213,6 +224,7 @@ object LaunchContract {
     const val LAUNCH_MODE_SIGLUS = "internal.siglus"
     const val LAUNCH_MODE_FVP = "internal.fvp"
     const val LAUNCH_MODE_ETHORNELL = "internal.ethornell"
+    const val LAUNCH_MODE_ADVHD = "internal.advhd"
     const val CMVS_LAUNCH_TOKEN = "cmvs_launch_token"
     const val LAUNCH_MODE_CMVS = "internal.cmvs"
     const val LAUNCH_MODE_FRAMEBUFFER = "internal.framebuffer"

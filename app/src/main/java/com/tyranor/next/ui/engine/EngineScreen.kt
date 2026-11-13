@@ -972,6 +972,7 @@ private fun engineIconRes(engine: EngineType): Int = when (engine) {
     EngineType.UK2 -> R.drawable.ic_engine_card_uk2
     EngineType.FVP -> R.drawable.ic_engine_card_fvp
     EngineType.ETHORNELL -> R.drawable.ic_engine_card_ethornell
+    EngineType.ADVHD -> R.drawable.ic_engine_icon
     EngineType.CMVS -> R.drawable.ic_engine_card_cmvs
     EngineType.SYSTEMNNN -> R.drawable.ic_engine_card_systemnnn
     EngineType.RENPY -> R.drawable.ic_engine_card_renpy
@@ -1048,7 +1049,7 @@ private fun engineTabOf(engine: EngineType): EngineTab = when (engine) {
     EngineType.RPGMAKER, EngineType.RPG_MV, EngineType.RPG_MZ -> EngineTab.RPGM
     EngineType.KIRIKIRI, EngineType.ONS, EngineType.ARTEMIS, EngineType.SIGLUS,
     EngineType.REALLIVE, EngineType.AVG32, EngineType.XSYS35, EngineType.XSYS4, EngineType.UK2, EngineType.FVP,
-    EngineType.ETHORNELL, EngineType.CMVS, EngineType.SYSTEMNNN,
+    EngineType.ETHORNELL, EngineType.ADVHD, EngineType.CMVS, EngineType.SYSTEMNNN,
     EngineType.RENPY, EngineType.YURIS, EngineType.CATSYSTEM2, EngineType.IMPACTO -> EngineTab.GAL
     // PC（手动添加，经 Winlator 运行）与主机模拟器同属「主机」分类
     EngineType.PSP, EngineType.NINTENDO_SWITCH, EngineType.PC -> EngineTab.CONSOLE

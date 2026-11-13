@@ -166,6 +166,9 @@ fun PerGameSettingsScreen(game: ScanGame) {
     var fvpNls by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_FVP_NLS)) }
     var ethornellNls by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_NLS)) }
     var ethornellFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_FONT)) }
+    var advhdNls by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_NLS)) }
+    var advhdFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_FONT)) }
+    var advhdEntry by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_ADVHD_ENTRY)) }
     var cmvsFont by remember { mutableStateOf(PerGameSettingsStore.getStr(ctx, gid, PerGameSettingsStore.F_CMVS_FONT)) }
     var fvpSystemFont by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT)) }
     var fvpTextHidpi by remember { mutableStateOf(PerGameSettingsStore.getBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI)) }
@@ -359,6 +362,17 @@ fun PerGameSettingsScreen(game: ScanGame) {
                 try {
                     val path = FontImport.importToPrivate(ctx, uri)
                     if (path != null) ethornellFont = path else AppNotice.makeText(ctx, R.string.ethornell_error_font, android.widget.Toast.LENGTH_SHORT).show()
+                } finally { importingFont = false }
+            }
+        }
+    }
+    val advhdFontLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null && !importingFont) {
+            importingFont = true
+            scope.launch {
+                try {
+                    val path = FontImport.importToPrivate(ctx, uri)
+                    if (path != null) advhdFont = path else android.widget.Toast.makeText(ctx, R.string.advhd_error_font, android.widget.Toast.LENGTH_SHORT).show()
                 } finally { importingFont = false }
             }
         }
@@ -605,6 +619,9 @@ fun PerGameSettingsScreen(game: ScanGame) {
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_FVP_NLS, fvpNls)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_NLS, ethornellNls)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ETHORNELL_FONT, ethornellFont)
+        PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_NLS, advhdNls)
+        PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_FONT, advhdFont)
+        PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_ADVHD_ENTRY, advhdEntry)
         PerGameSettingsStore.setStr(ctx, gid, PerGameSettingsStore.F_CMVS_FONT, cmvsFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_SYSTEM_FONT, fvpSystemFont)
         PerGameSettingsStore.setBool(ctx, gid, PerGameSettingsStore.F_FVP_TEXT_HIDPI, fvpTextHidpi)
@@ -1240,6 +1257,37 @@ fun PerGameSettingsScreen(game: ScanGame) {
                                 enabled = !importingFont,
                             )
                             Text(stringResource(R.string.ethornell_settings_note), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(16.dp))
+                        }
+                    }
+                    EngineType.ADVHD -> item {
+                        SectionCard("AdvHD (WillPlus)") {
+                            OverrideChoice(
+                                stringResource(R.string.advhd_nls_title),
+                                advhdNlsOptions().toMap(),
+                                EngineSettingsStore.getAdvhdNls(ctx),
+                                advhdNls,
+                            ) { advhdNls = it }
+                            OverrideFontPreference(
+                                label = stringResource(R.string.advhd_font_title),
+                                globalValue = EngineSettingsStore.getAdvhdFont(ctx),
+                                override = advhdFont,
+                                followGameDefaultLabel = stringResource(R.string.advhd_font_default),
+                                onSet = { advhdFont = it },
+                                onPick = { if (!importingFont) advhdFontLauncher.launch("*/*") },
+                                enabled = !importingFont,
+                            )
+                            OverrideText(
+                                label = stringResource(R.string.advhd_entry_title),
+                                globalValue = EngineSettingsStore.getAdvhdEntry(ctx),
+                                override = advhdEntry,
+                                hint = stringResource(R.string.advhd_entry_hint),
+                                onSet = { advhdEntry = it?.trim()?.lowercase(java.util.Locale.ROOT) },
+                            )
+                            Text(
+                                stringResource(R.string.advhd_settings_note),
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.padding(16.dp),
+                            )
                         }
                     }
                     EngineType.XSYS35 -> item {

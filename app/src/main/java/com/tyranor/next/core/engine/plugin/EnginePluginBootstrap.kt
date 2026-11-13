@@ -98,6 +98,7 @@ object EnginePluginBootstrap {
             EngineType.UK2,
             EngineType.FVP,
             EngineType.ETHORNELL,
+            EngineType.ADVHD,
             EngineType.CMVS,
             EngineType.YURIS,
             EngineType.CATSYSTEM2,

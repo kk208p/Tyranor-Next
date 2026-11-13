@@ -2722,6 +2722,7 @@ internal fun EngineType.coverColor(): Color = when (this) {
     EngineType.RUNTIME_MODULE -> Color(0xFF5C6BC0)
     EngineType.PSP -> Color(0xFF6D4C9F)
     EngineType.NINTENDO_SWITCH -> Color(0xFFD32F2F)
+    EngineType.ADVHD -> Color(0xFF6D4C41)
     EngineType.SYSTEMNNN, EngineType.UNKNOWN -> Color(0xFF607D8B)
 }
 
@@ -2734,6 +2735,7 @@ internal fun shouldShowSaveManagement(engine: EngineType, sdkInt: Int = Build.VE
         (!engine.isManual &&
             engine != EngineType.RUNTIME_MODULE &&
             engine != EngineType.UNKNOWN &&
+            engine != EngineType.ADVHD &&
             (engine != EngineType.ETHORNELL ||
                 com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
             !ExternalEngineModuleRegistry.isExternalEngine(engine) &&

@@ -1034,6 +1034,18 @@
     <string name="graphics_filter_decrease">−</string>
     <string name="graphics_filter_increase">+</string>
     <string name="ethornell_settings_title">Ethornell / BGI 設定</string>
+    <string name="advhd_settings_title">AdvHD (WillPlus) 設定</string>
+    <string name="advhd_nls_title">テキストエンコーディング</string>
+    <string name="advhd_font_title">フォント</string>
+    <string name="advhd_font_default">システム CJK フォント</string>
+    <string name="advhd_entry_title">開始スクリプト</string>
+    <string name="advhd_entry_hint">空欄 = 自動（タイトルのみのスクリプトをスキップ）</string>
+    <string name="advhd_settings_note">テキストは内蔵レンダラーで描画されます。GBK の漢化パッチではエンコーディングを GBK にし、CJK フォントを選択してください。開始スクリプトが空欄の場合、MAINMENU へ移動するだけのスクリプトはスキップされます。</string>
+    <string name="advhd_error_font">フォントの読み込みに失敗しました</string>
+    <string name="advhd_error_root">ゲームディレクトリを読み取れません（全ファイルアクセスが必要）</string>
+    <string name="advhd_error_bootstrap">AdvHD の ARC/ws2 起動証拠が見つかりません</string>
+    <string name="advhd_error_userdata">AdvHD のプライベートユーザーディレクトリを作成できません</string>
+    <string name="advhd_error_session_busy">別の AdvHD ゲームが実行中です</string>
     <string name="ethornell_error_session_busy">Ethornell で別のゲームが実行中、またはセッションを開始・終了しています。現在のゲームを終了してから再試行してください。</string>
     <string name="ethornell_nls_title">描画テキストの文字コード</string>
     <string name="ethornell_font_title">カスタムフォント</string>

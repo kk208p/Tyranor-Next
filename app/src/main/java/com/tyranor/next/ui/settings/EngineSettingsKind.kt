@@ -17,6 +17,7 @@ enum class EngineSettingsKind(@param:StringRes val titleRes: Int) {
     FRAMEBUFFER(R.string.engine_settings_framebuffer_title),
     FVP(R.string.engine_settings_fvp_title),
     ETHORNELL(R.string.ethornell_settings_title),
+    ADVHD(R.string.advhd_settings_title),
     CMVS(R.string.engine_settings_cmvs_title),
     SYSTEMNNN(R.string.engine_settings_systemnnn_title),
     XSYS35(R.string.engine_settings_xsys35_title),
@@ -41,6 +42,7 @@ internal fun engineSettingsKindOf(engine: EngineType): EngineSettingsKind? = whe
     EngineType.REALLIVE, EngineType.AVG32, EngineType.UK2 -> EngineSettingsKind.FRAMEBUFFER
     EngineType.FVP -> EngineSettingsKind.FVP
     EngineType.ETHORNELL -> EngineSettingsKind.ETHORNELL
+    EngineType.ADVHD -> EngineSettingsKind.ADVHD
     EngineType.CMVS -> EngineSettingsKind.CMVS
     EngineType.SYSTEMNNN -> EngineSettingsKind.SYSTEMNNN
     EngineType.XSYS35 -> EngineSettingsKind.XSYS35

@@ -7,6 +7,7 @@ import com.tyranor.next.core.engine.plugin.EnginePluginBootstrap
 import com.tyranor.next.core.engine.runtime.RuntimeModuleLaunchResult
 import com.tyranor.next.core.game.launch.LaunchResult
 import com.tyranor.next.core.game.launch.EthornellPrepareError
+import com.tyranor.next.core.game.launch.AdvhdPrepareError
 import com.tyranor.next.core.game.launch.SystemNnnResourceError
 import com.tyranor.next.core.game.launch.MirrorPrepareStage
 import com.tyranor.next.core.i18n.AppLocaleController
@@ -45,6 +46,14 @@ private fun LaunchResult.Failure.toUserMessage(context: Context): String {
             EthornellPrepareError.FONT -> R.string.ethornell_error_font
             EthornellPrepareError.USER_DATA -> R.string.ethornell_error_userdata
             EthornellPrepareError.SESSION_BUSY -> R.string.ethornell_error_session_busy
+        })
+
+        is LaunchResult.Failure.AdvhdPrepareFailed -> localized.getString(when (error) {
+            AdvhdPrepareError.RESOURCE_ROOT -> R.string.advhd_error_root
+            AdvhdPrepareError.BOOTSTRAP -> R.string.advhd_error_bootstrap
+            AdvhdPrepareError.FONT -> R.string.advhd_error_font
+            AdvhdPrepareError.USER_DATA -> R.string.advhd_error_userdata
+            AdvhdPrepareError.SESSION_BUSY -> R.string.advhd_error_session_busy
         })
 
         LaunchResult.Failure.AllFilesAccessRequested ->

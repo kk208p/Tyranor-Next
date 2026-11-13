@@ -1128,6 +1128,9 @@ object EngineScanner {
         var uk2MesNode: T? = null
         var ethornellSystemNode: T? = null
         var ambiguousEthornellSystem = false
+        // AdvHD：根目录 .arc 候选（最多 8 个，扫描期只读 64 KiB 头部）
+        val advhdArcNodes = mutableListOf<T>()
+        var hasAdvhdExe = false
         var hasCmvsScript = false
         var hasCmvsStart = false
         var cmvsStartCount = 0
@@ -1225,6 +1228,10 @@ object EngineScanner {
                     if (ethornellSystemNode != null) ambiguousEthornellSystem = true
                     ethornellSystemNode = entry
                 }
+                rel.isEmpty() && lower.endsWith(".arc") -> {
+                    if (advhdArcNodes.size < 8) advhdArcNodes.add(entry)
+                }
+                rel.isEmpty() && lower.startsWith("advhd") && lower.endsWith(".exe") -> hasAdvhdExe = true
                 lower == "index.html" || lower == "index.htm" -> {
                     hasIndex = true
                     if (rel.isEmpty()) hasRootIndex = true
@@ -1343,6 +1350,13 @@ object EngineScanner {
         // Preserve explicit UK2 evidence; only outrank its weak generic .mes fallback.
         if (!ambiguousEthornellSystem && ethornellSystemNode?.let { EthornellArchiveProbe.hasBootstrap(headOf(it), sizeOf(it)) } == true) {
             return Detection(EngineType.ETHORNELL, 96, LAUNCH_TARGET_GAME_DIR)
+        }
+        if (advhdArcNodes.any { AdvhdArchiveProbe.hasBootstrap(headOf(it), sizeOf(it)) }) {
+            return Detection(EngineType.ADVHD, 94, LAUNCH_TARGET_GAME_DIR)
+        }
+        // 主程序可能被汉化补丁改名，但 AdvHD*.exe + 多个根 ARC 仍是可靠组合证据。
+        if (hasAdvhdExe && advhdArcNodes.isNotEmpty()) {
+            return Detection(EngineType.ADVHD, 92, LAUNCH_TARGET_GAME_DIR)
         }
         val seenKind = classifySeenArchive(seenArchiveNode?.let { headOf(it) })
         if (hasGameexeIni && seenKind != null) {

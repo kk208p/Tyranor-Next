@@ -58,6 +58,7 @@ import com.tyranor.next.core.engine.runtime.RuntimeModuleRegistry
 import com.tyranor.next.core.game.manual.AndroidAppGames
 import com.tyranor.next.core.game.model.GamePathUtils
 import com.tyranor.next.core.game.model.EthornellPaths
+import com.tyranor.next.core.game.model.AdvhdPaths
 import com.tyranor.next.core.game.model.ScanGame
 import com.tyranor.next.core.game.playtime.GamePlaytimeRepository
 import com.tyranor.next.core.game.storage.SystemNnnCopyStore
@@ -160,6 +161,7 @@ object EngineLauncher {
         EngineType.UK2,
         EngineType.FVP,
         EngineType.ETHORNELL,
+        EngineType.ADVHD,
         EngineType.CMVS,
         EngineType.RENPY,
         EngineType.RUFFLE,
@@ -412,6 +414,18 @@ object EngineLauncher {
                 }
             }
         }
+        // AdvHD：单宿主进程；同一游戏重回前台，其余一律按会话占用拒绝（v1 不做多写者）。
+        if (game.engine == EngineType.ADVHD) {
+            currentCoroutineContext().ensureActive()
+            val live = EngineSessionRegistry.currentLiveGame(context, EngineSessionRegistry.HOST_ADVHD)
+            val alive = EngineSessionRegistry.isHostAlive(context, EngineSessionRegistry.HOST_ADVHD)
+            if (live == game.uri) {
+                return restoreAdvhd(context, game).also { if (it == LaunchResult.Success) onDispatched() }
+            }
+            if (live != null || alive) {
+                return LaunchResult.Failure.AdvhdPrepareFailed(AdvhdPrepareError.SESSION_BUSY)
+            }
+        }
         // 手动添加的安卓游戏：无引擎会话/存档/权限前置，按包名直接跳转（必须在目录解析之前分流）
         if (AndroidAppGames.isAndroidApp(game)) {
             return launchAndroidApp(context, game).also { if (it == LaunchResult.Success) onDispatched() }
@@ -492,6 +506,9 @@ object EngineLauncher {
         if (game.engine != EngineType.SYSTEMNNN) requestAllFilesAccessIfNeeded(context, game, path)?.let { return it }
         if (game.engine == EngineType.ETHORNELL) {
             prepareEthornell(context, game, path, settings)?.let { return it }
+        }
+        if (game.engine == EngineType.ADVHD) {
+            prepareAdvhd(context, game, path, settings)?.let { return it }
         }
         EnginePluginBootstrap.ensureForLaunch(context, game.engine)?.let {
             return LaunchResult.Failure.PluginBootstrapFailed(it)
@@ -1280,7 +1297,8 @@ object EngineLauncher {
 
             // 视频播放（ONS 覆盖层 / Artemis VideoView）依赖 IJK 三件套。
             EngineType.ONS,
-            EngineType.ARTEMIS -> add(NativeRuntimePack.PACK_IJK)
+            EngineType.ARTEMIS,
+            EngineType.ADVHD -> add(NativeRuntimePack.PACK_IJK)
 
             EngineType.XSYS35,
             EngineType.XSYS4 -> add(NativeRuntimePack.PACK_XSYSTEM)
@@ -1381,6 +1399,7 @@ object EngineLauncher {
 
             EngineType.FVP -> buildFvpIntent(context, path, game, settings)
             EngineType.ETHORNELL -> buildEthornellIntent(context, path, game, settings)
+            EngineType.ADVHD -> buildAdvhdIntent(context, path, game, settings)
             EngineType.CMVS -> buildCmvsIntent(context, path, game)
 
             EngineType.RPGMAKER,
@@ -1665,6 +1684,78 @@ object EngineLauncher {
         putExtra(LaunchContract.ETHORNELL_FONT_PATH, EthornellPaths.validatedFont(context.filesDir, settings.ethornellFont))
         putExtra(LaunchContract.ETHORNELL_USER_DATA_DIR, EthornellPaths.gameUserDataDir(File(path)).absolutePath)
         putExtra(LaunchContract.UI_LANGUAGE_TAG, com.tyranor.next.core.i18n.AppLocaleController.wrap(context).resources.configuration.locales[0].toLanguageTag())
+    }
+
+    /** Restore a live AdvHD task without re-sending the payload. */
+    private fun restoreAdvhd(context: Context, game: ScanGame): LaunchResult {
+        return try {
+            val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager
+            val task = manager?.appTasks?.firstOrNull { candidate ->
+                val base = candidate.taskInfo?.baseIntent ?: return@firstOrNull false
+                base.component?.packageName == context.packageName &&
+                    base.component?.className == "com.core.advhd.AdvhdActivity" &&
+                    base.getStringExtra(LaunchContract.ROOT_URI) == game.uri
+            } ?: return LaunchResult.Failure.AdvhdPrepareFailed(AdvhdPrepareError.SESSION_BUSY)
+            task.moveToFront()
+            runCatching { GameLibraryFacade.recordRecentGame(context, game) }
+            LaunchResult.Success
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (error: Exception) {
+            LaunchResult.Failure.StartFailed(error.message)
+        }
+    }
+
+    /** AdvHD preflight: read-only resource root, real bootstrap evidence, private user root. */
+    private fun prepareAdvhd(
+        context: Context, game: ScanGame, path: String, settings: ResolvedEngineSettings,
+    ): LaunchResult.Failure? {
+        fun failed(error: AdvhdPrepareError) = LaunchResult.Failure.AdvhdPrepareFailed(error)
+        var stage = AdvhdPrepareError.RESOURCE_ROOT
+        return try {
+            val root = File(path).canonicalFile
+            if (Uri.parse(game.uri).scheme == "content") {
+                val allowed = ethornellStorageRoot(path)?.canonicalFile ?: return failed(AdvhdPrepareError.RESOURCE_ROOT)
+                if (!root.toPath().startsWith(allowed.toPath())) return failed(AdvhdPrepareError.RESOURCE_ROOT)
+            }
+            if (!root.isDirectory || !root.canRead()) return failed(AdvhdPrepareError.RESOURCE_ROOT)
+            if (EngineScanner.detectEngine(root).engine != EngineType.ADVHD) return failed(AdvhdPrepareError.BOOTSTRAP)
+            stage = AdvhdPrepareError.FONT
+            if (EthornellPaths.validatedFont(context.filesDir, settings.advhdFont) == null) {
+                return failed(AdvhdPrepareError.FONT)
+            }
+            stage = AdvhdPrepareError.USER_DATA
+            val dir = AdvhdPaths.userDataDir(context.filesDir, game.uri)
+            AdvhdPaths.validateUserDataDir(context.filesDir, game.uri, dir.absolutePath)
+            if ((!dir.isDirectory && !dir.mkdirs()) || !dir.canWrite() ||
+                !dir.canonicalFile.toPath().startsWith(context.filesDir.canonicalFile.toPath())) {
+                return failed(AdvhdPrepareError.USER_DATA)
+            }
+            null
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: java.io.IOException) {
+            failed(stage)
+        } catch (_: SecurityException) {
+            failed(stage)
+        }
+    }
+
+    private fun buildAdvhdIntent(
+        context: Context, path: String, game: ScanGame, settings: ResolvedEngineSettings,
+    ): Intent = Intent().setClassName(context, "com.core.advhd.AdvhdActivity").apply {
+        putExtra(LaunchContract.PATH, File(path).canonicalPath)
+        putExtra(LaunchContract.GAME_PATH, File(path).canonicalPath)
+        putExtra(LaunchContract.ROOT_URI, game.uri)
+        putExtra(LaunchContract.LAUNCH_MODE, LaunchContract.LAUNCH_MODE_ADVHD)
+        putExtra(LaunchContract.ADVHD_NLS, settings.advhdNls)
+        putExtra(LaunchContract.ADVHD_FONT_PATH, EthornellPaths.validatedFont(context.filesDir, settings.advhdFont))
+        putExtra(LaunchContract.ADVHD_USER_DATA_DIR, AdvhdPaths.userDataDir(context.filesDir, game.uri).absolutePath)
+        putExtra(LaunchContract.ADVHD_ENTRY, settings.advhdEntry)
+        putExtra(
+            LaunchContract.UI_LANGUAGE_TAG,
+            com.tyranor.next.core.i18n.AppLocaleController.wrap(context).resources.configuration.locales[0].toLanguageTag(),
+        )
     }
 
     /** FVP uses its own fixed `<resource root>/save` protocol. */

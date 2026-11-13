@@ -25,6 +25,9 @@ enum class MirrorPrepareStage {
 }
 
 enum class EthornellPrepareError { RESOURCE_ROOT, BOOTSTRAP, FONT, USER_DATA, SESSION_BUSY }
+
+/** AdvHD 启动预检阶段；文案由 UI 映射。 */
+enum class AdvhdPrepareError { RESOURCE_ROOT, BOOTSTRAP, FONT, USER_DATA, SESSION_BUSY }
 enum class SystemNnnResourceError { SOURCE_MISSING, STORAGE_RESTRICTED, INVALID_SOURCE, SOURCE_BUSY, CORRUPT_COPY, SAVE_NOT_WRITABLE }
 
 /**
@@ -42,6 +45,9 @@ sealed interface LaunchResult {
         /** 无法把游戏 URI 解析为本地目录路径。 */
         data object GameDirUnresolved : Failure
         data class EthornellPrepareFailed(val error: EthornellPrepareError) : Failure
+
+        /** AdvHD 启动预检失败（资源根 / 探针 / 字体 / 私有目录 / 会话占用）。 */
+        data class AdvhdPrepareFailed(val error: AdvhdPrepareError) : Failure
         data class SystemNnnResourcesFailed(val error: SystemNnnResourceError) : Failure
         data class SavePreparationFailed(val error: SaveSyncError) : Failure
 

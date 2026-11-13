@@ -178,6 +178,19 @@
             <property android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY" android:value="true" />
         </activity>
 
+        <!-- AdvHD（WillPlus ADVプレイヤHD）宿主：独立 VM 线程 + SurfaceView 呈现 -->
+        <activity
+            android:name="com.core.advhd.AdvhdActivity"
+            android:exported="false"
+            android:process=":advhd"
+            android:launchMode="singleInstance"
+            android:taskAffinity="com.core.Advhd"
+            android:screenOrientation="sensorLandscape"
+            android:theme="@style/Theme.Ethornell"
+            android:windowSoftInputMode="adjustNothing"
+            android:configChanges="keyboard|keyboardHidden|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|density|fontScale|locale|layoutDirection">
+        </activity>
+
         <!-- RealLive / AVG32 / UK2（framebuffer 软渲染）宿主：Choreographer 主循环 + Bitmap 呈现 -->
         <activity
             android:name="com.core.games.FramebufferGameActivity"

@@ -1034,6 +1034,18 @@
     <string name="graphics_filter_decrease">−</string>
     <string name="graphics_filter_increase">+</string>
     <string name="ethornell_settings_title">Ethornell / BGI 设置</string>
+    <string name="advhd_settings_title">AdvHD (WillPlus) 设置</string>
+    <string name="advhd_nls_title">文本编码</string>
+    <string name="advhd_font_title">字体</string>
+    <string name="advhd_font_default">跟随系统 CJK 字体</string>
+    <string name="advhd_entry_title">入口脚本</string>
+    <string name="advhd_entry_hint">留空 = 自动（跳过纯标题/启动脚本）</string>
+    <string name="advhd_settings_note">文本由内置渲染器绘制：汉化补丁请把编码切到 GBK，并选择覆盖中文的字体。入口脚本留空时，运行时会跳过只跳转 MAINMENU 的启动脚本。</string>
+    <string name="advhd_error_font">字体导入失败</string>
+    <string name="advhd_error_root">游戏目录不可读（需要「所有文件访问」权限）</string>
+    <string name="advhd_error_bootstrap">未找到 AdvHD ARC/ws2 启动特征</string>
+    <string name="advhd_error_userdata">无法创建 AdvHD 私有用户目录</string>
+    <string name="advhd_error_session_busy">已有 AdvHD 游戏在运行</string>
     <string name="ethornell_error_session_busy">Ethornell 正在运行另一个游戏，或会话正在初始化/关闭。请先退出当前游戏再重试。</string>
     <string name="ethornell_nls_title">图形文本编码</string>
     <string name="ethornell_font_title">自定义字体</string>

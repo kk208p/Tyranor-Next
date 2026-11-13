@@ -226,6 +226,20 @@ object EngineSettingsResolver {
                 str(PerGameSettingsStore.F_ETHORNELL_FONT),
                 EngineSettingsStore.getEthornellFont(app),
             ),
+            advhdNls = EffectiveEngineSettings.resolveAllowed(
+                str(PerGameSettingsStore.F_ADVHD_NLS),
+                EngineSettingsStore.getAdvhdNls(app),
+                EngineSettingsStore.ADVHD_NLS_VALUES,
+                EngineSettingsStore.ADVHD_NLS_SJIS,
+            ),
+            advhdFont = EffectiveEngineSettings.resolve(
+                str(PerGameSettingsStore.F_ADVHD_FONT),
+                EngineSettingsStore.getAdvhdFont(app),
+            ),
+            advhdEntry = EffectiveEngineSettings.resolve(
+                str(PerGameSettingsStore.F_ADVHD_ENTRY),
+                EngineSettingsStore.getAdvhdEntry(app),
+            ),
             cmvsFont = EffectiveEngineSettings.resolve(
                 str(PerGameSettingsStore.F_CMVS_FONT),
                 EngineSettingsStore.getCmvsFont(app),
@@ -385,6 +399,12 @@ data class ResolvedEngineSettings(
     val ethornellNls: String,
     /** Empty = engine fallback; nonempty paths must pass the private-font launch preflight. */
     val ethornellFont: String,
+    /** AdvHD 生效文本编码（sjis/gbk）。 */
+    val advhdNls: String,
+    /** AdvHD 字体绝对路径（空 = 宿主使用系统 CJK 字体）。 */
+    val advhdFont: String,
+    /** AdvHD 入口脚本（空 = 运行时启发式：跳过纯标题/启动脚本）。 */
+    val advhdEntry: String,
     /** CMVS 字体绝对路径（空 = 未选择，启动预检失败）。 */
     val cmvsFont: String,
     /** CMVS 字体集合索引。 */
