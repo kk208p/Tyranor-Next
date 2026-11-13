@@ -3,13 +3,13 @@
   "abi_version": 2,
   "source": "https://github.com/kk208p/advhd-rs",
   "license": "MPL-2.0",
-  "commit": "f70287f50c1f793edfc8ee49eeaa3a5b0bb1c4e4",
+  "commit": "82daa6528caf681316c74132ccc70133e312f816",
   "target": "aarch64-linux-android",
   "min_sdk": 26,
   "ndk": "28.0.13004108",
   "rustc": "1.99.1",
   "built": "2026-11-13",
-  "sha256": "1275ac943798f60998a768f69f9a69f91fb02b7cec90b7b9ce5fcb9483451509",
+  "sha256": "d6212fa78a84055999edd1075250f8541b3b21e33f3d884801769b581580d736",
   "dependencies": "pure Rust (std + lewton + fontdue + encoding_rs); no libc++_shared",
-  "notes": "Lua UI generation variant (lua53: 168/177/125/48 series; mlua vendored). Instrumented UI host (advhd_lua_trace); typewriter reveal + auto-advance timers (advhd_tick/set_text_speed/set_auto); Lua bytecode width normalizer (bc); translation overlay + encodings sjis/gbk/big5/utf8/utf16le; movie events (0x35 original .dat, 0x3A a[2] wait) for IJK/FFmpeg host playback; PNA 0x39 drawable-index + descending; current-line save; choice overlay; masks; fast arg-table scan"
+  "notes": "Lua UI generation variant (lua53: 168/177/125/48 series; mlua vendored). Native UI first subset (cclass.lua_Layers/Sounds/AutoCursor/MeasureTime, cfunc state group; title menu renders on device). Instrumented UI host (advhd_lua_trace/lua_probe); typewriter reveal + auto-advance timers; Lua bytecode width normalizer (bc); translation overlay + encodings sjis/gbk/big5/utf8/utf16le; movie events; PNA 0x39 drawable-index + descending; current-line save; choice overlay; masks; fast arg-table scan"
 }
