@@ -91,6 +91,9 @@ public final class AdvhdActivity extends AppCompatActivity
     /** Last forwarded pointer position (MOVE throttle). */
     private float lastPointerX, lastPointerY;
     private boolean autoMode;
+    /** Engine-thread frame counter: pump heartbeat + Lua trace cadence. */
+    private long frameCount;
+    private int lastTraceLen = -1;
     /** Last target volume applied to the BGM player (for fade-out ramps). */
     private float bgmVolume = 1f;
     /** advhd_tick flag: the auto-advance delay elapsed; host must advance. */
@@ -313,6 +316,13 @@ public final class AdvhdActivity extends AppCompatActivity
                         pollAndPost(); // auto-advance on the engine thread itself
                     }
                     NativeAdvhd.frame(handle);
+                    frameCount++;
+                    if (frameCount % 300 == 1) {
+                        android.util.Log.i("AdvhdHost", "tick frames=" + frameCount);
+                    }
+                    if (frameCount % 60 == 0) {
+                        refreshLuaTraceFile();
+                    }
                     if (firstFrameLogged == 0) {
                         firstFrameLogged = Math.max(1, (System.nanoTime() - startedAt) / 1_000_000);
                         android.util.Log.i("AdvhdHost", "first frame ms=" + firstFrameLogged);
@@ -821,6 +831,25 @@ public final class AdvhdActivity extends AppCompatActivity
                 android.util.Log.i("AdvhdHost", "lua ... " + (lines.length - shown) + " more");
             }
         });
+    }
+
+    /** Engine thread: persist the Lua UI trace whenever it grows. probeLua
+     * only wrote the file once at boot, so pump/pointer activity after the
+     * probe (PROCESS handshakes, EVAL FAILs, menu traces) was invisible to
+     * run-as pulls — refresh at ~1 Hz so the file reflects the live trace. */
+    private void refreshLuaTraceFile() {
+        if (handle == 0 || destroyed) return;
+        String trace = NativeAdvhd.luaTrace(handle);
+        if (trace == null || trace.isEmpty()) return;
+        if (trace.length() == lastTraceLen) return;
+        lastTraceLen = trace.length();
+        try {
+            File out = new File(new File(getFilesDir(), "advhd"), "lua_trace.txt");
+            try (java.io.FileWriter w = new java.io.FileWriter(out)) {
+                w.write("lines=" + trace.split("\n").length + "\n" + trace);
+            }
+        } catch (IOException ignored) {
+        }
     }
 
     /** Debug: evaluate a Lua snippet in the instrumented UI host, then show

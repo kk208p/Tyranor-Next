@@ -67,6 +67,8 @@ int32_t advhd_set_font(AdvhdRuntime *rt, const char *path_utf8, uint32_t font_in
 int32_t advhd_load_translation(AdvhdRuntime *rt, const char *path_utf8);
 /* Typewriter / auto-advance timers. tick returns TICK_TEXT_DONE=1 and
  * TICK_AUTO_DUE=2 bits; the host calls advhd_advance on AUTO_DUE. */
+#define ADVHD_TICK_TEXT_DONE 1
+#define ADVHD_TICK_AUTO_DUE 2
 uint32_t advhd_tick(AdvhdRuntime *rt, uint32_t delta_ms);
 void advhd_set_text_speed(AdvhdRuntime *rt, float cps);
 void advhd_set_auto(AdvhdRuntime *rt, int32_t enabled, uint32_t delay_ms);
