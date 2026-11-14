@@ -2,7 +2,7 @@
   "library": "libadvhd_abi.so",
   "abi_version": 2,
   "source": "https://github.com/kk208p/advhd-rs",
-  "license": "MPL-2.0",
+  "license": "GPL-2.0-or-later",
   "commit": "f0837e293448f25fbd53419454b8df1211b6d59e",
   "target": "aarch64-linux-android",
   "min_sdk": 26,

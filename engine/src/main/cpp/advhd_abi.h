@@ -1,5 +1,5 @@
 /* AdvHD runtime C ABI v2 — vendored from advhd-rs include/advhd.h.
- * Source: https://github.com/kk208p/advhd-rs (MPL-2.0), ABI version 2.
+ * Source: https://github.com/kk208p/advhd-rs (GPL-2.0-or-later), ABI version 2.
  * Keep the exported symbol set in sync with the .so when updating it.
  *
  * Threading: a runtime handle is single-owner. Serialize calls from one
