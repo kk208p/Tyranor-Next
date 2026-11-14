@@ -30,7 +30,7 @@ uint64_t nextToken = 1;
     X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
     X(choice_id) X(event_text) X(event_name) X(event_voice) X(last_error) \
     X(message_visible) X(history_count) X(history_text) X(frame) X(extract_asset) \
-    X(save) X(load) X(is_dirty) X(invalidate) X(set_choice_overlay)
+    X(save) X(load) X(is_dirty) X(invalidate) X(pointer) X(set_choice_overlay)
 
 #define DECLARE(name) decltype(&advhd_##name) api_##name = nullptr;
 ADVHD_API_LIST(DECLARE)
@@ -287,6 +287,33 @@ jint choose(JNIEnv*, jclass, jlong token, jint index) {
     return s ? api_choose(s->rt, index) : -1;
 }
 
+/* Pointer input for the Lua UI session. View coords are mapped to native
+ * UI coords by inverting the frame() letterbox (scale + centered offset). */
+jint pointer(JNIEnv*, jclass, jlong token, jfloat x, jfloat y, jint action) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (!s || !s->rt || !api_pointer) return -1;
+    float ux = x;
+    float uy = y;
+    if (s->window) {
+        const int32_t dw = ANativeWindow_getWidth(s->window);
+        const int32_t dh = ANativeWindow_getHeight(s->window);
+        const uint32_t w = api_frame_width();
+        const uint32_t h = api_frame_height();
+        if (dw > 0 && dh > 0 && w > 0 && h > 0) {
+            const float scale = std::min(static_cast<float>(dw) / w,
+                                         static_cast<float>(dh) / h);
+            const float out_w = static_cast<float>(w) * scale;
+            const float out_h = static_cast<float>(h) * scale;
+            const float off_x = (static_cast<float>(dw) - out_w) / 2.0f;
+            const float off_y = (static_cast<float>(dh) - out_h) / 2.0f;
+            ux = (x - off_x) / scale;
+            uy = (y - off_y) / scale;
+        }
+    }
+    return api_pointer(s->rt, ux, uy, action);
+}
+
 jstring eventText(JNIEnv* env, jclass, jlong token) { return readString(env, token, api_event_text); }
 jstring eventName(JNIEnv* env, jclass, jlong token) { return readString(env, token, api_event_name); }
 jstring eventVoice(JNIEnv* env, jclass, jlong token) { return readString(env, token, api_event_voice); }
@@ -433,6 +460,7 @@ JNINativeMethod methods[] = {
     {"choiceText", "(JI)Ljava/lang/String;", reinterpret_cast<void*>(choiceText)},
     {"choiceId", "(JI)I", reinterpret_cast<void*>(choiceId)},
     {"choose", "(JI)I", reinterpret_cast<void*>(choose)},
+    {"pointer", "(JFFI)I", reinterpret_cast<void*>(pointer)},
     {"eventText", "(J)Ljava/lang/String;", reinterpret_cast<void*>(eventText)},
     {"eventName", "(J)Ljava/lang/String;", reinterpret_cast<void*>(eventName)},
     {"eventVoice", "(J)Ljava/lang/String;", reinterpret_cast<void*>(eventVoice)},

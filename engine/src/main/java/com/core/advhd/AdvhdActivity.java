@@ -88,6 +88,8 @@ public final class AdvhdActivity extends AppCompatActivity
     private boolean choicePending, processVerified;
     private long firstFrameLogged;
     private long lastFrameNanos;
+    /** Last forwarded pointer position (MOVE throttle). */
+    private float lastPointerX, lastPointerY;
     private boolean autoMode;
     /** Last target volume applied to the BGM player (for fade-out ramps). */
     private float bgmVolume = 1f;
@@ -339,8 +341,27 @@ public final class AdvhdActivity extends AppCompatActivity
 
     private boolean touch(MotionEvent event) {
         if (moviePlaying) return true;
-        if (event.getActionMasked() == MotionEvent.ACTION_UP) {
-            if (dialog == null && !choicePending) advanceOnce();
+        if (dialog != null || choicePending) return true;
+        int a = event.getActionMasked();
+        if (handle != 0 && !destroyed
+                && (a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_MOVE
+                        || a == MotionEvent.ACTION_UP)) {
+            float x = event.getX();
+            float y = event.getY();
+            // MOVE floods; forward only real position changes. DOWN/UP always
+            // dispatch. Mapping: 0=move 1=press 2=release.
+            if (a != MotionEvent.ACTION_MOVE || x != lastPointerX || y != lastPointerY) {
+                lastPointerX = x;
+                lastPointerY = y;
+                final int act = a == MotionEvent.ACTION_DOWN ? 1
+                        : a == MotionEvent.ACTION_UP ? 2 : 0;
+                final float fx = x;
+                final float fy = y;
+                engine.execute(() -> NativeAdvhd.pointer(handle, fx, fy, act));
+            }
+        }
+        if (a == MotionEvent.ACTION_UP) {
+            advanceOnce();
         }
         return true;
     }

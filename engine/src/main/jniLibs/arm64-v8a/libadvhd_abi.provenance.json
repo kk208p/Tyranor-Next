@@ -3,13 +3,13 @@
   "abi_version": 2,
   "source": "https://github.com/kk208p/advhd-rs",
   "license": "MPL-2.0",
-  "commit": "58405c0d7f66e8845ea1b48fbd32eafe38dbc05a",
+  "commit": "e2d56cecafcb9995af46d8e194b48ce8c2bc789b",
   "target": "aarch64-linux-android",
   "min_sdk": 26,
   "ndk": "28.0.13004108",
   "rustc": "1.99.1",
-  "built": "2026-11-13",
-  "sha256": "35753dd2a5195e19eea3306f3da867d3c7939cb1313bb21457584b8f533e7c20",
+  "built": "2026-11-14",
+  "sha256": "d1ce5750a3c01dae425c7847639ab27c2168499f66dca00739f74b667ab9786d",
   "dependencies": "pure Rust (std + lewton + fontdue + encoding_rs); no libc++_shared",
-  "notes": "Lua UI generation variant (lua53: 168/177/125/48 series; mlua vendored). Native UI first subset (cclass.lua_Layers/Sounds/AutoCursor/MeasureTime, cfunc state group; title menu renders on device). Instrumented UI host (advhd_lua_trace/lua_probe); typewriter reveal + auto-advance timers; Lua bytecode width normalizer (bc); translation overlay + encodings sjis/gbk/big5/utf8/utf16le; movie events; PNA 0x39 drawable-index + descending; current-line save; choice overlay; masks; fast arg-table scan"
+  "notes": "Lua UI generation variant (lua53: 168/177/125/48 series; mlua vendored). M2-c part2: menu interaction natives (advhd_pointer + chroma hit-test, getCursorPos, startTransition/isTransition engine-side state, setSubLayerParam COLOR/POS/SCALE store, sub-layer scale-pulse effects, cfunc GetGameState/SetVariable/NeedProcess bridge, __advhd_frame/__advhd_pointer driver chunk: per-frame menu pump + pointer dispatch). Plus prior: native UI subset (title renders on device), instrumented UI host (advhd_lua_trace/lua_probe), typewriter + auto timers, bc normalizer, translation overlay + 5 encodings, movie events, PNA 0x39 drawable-index + descending, current-line save, choice overlay, masks, fast arg-table scan"
 }

@@ -91,6 +91,9 @@ int32_t advhd_history_text(AdvhdRuntime *rt, int32_t index, char *buf, int32_t c
 int32_t advhd_debug_state(AdvhdRuntime *rt, char *buf, int32_t cap);
 int32_t advhd_frame(AdvhdRuntime *rt, uint8_t *buf, uint32_t w, uint32_t h, uint32_t stride);
 void advhd_invalidate(AdvhdRuntime *rt);
+/* Lua UI pointer input (Lua-enabled .so variants): UI-space coords, action
+ * 0=move 1=press 2=release. Returns the hit chroma part number (0=none). */
+int32_t advhd_pointer(AdvhdRuntime *rt, float x, float y, int32_t action);
 void advhd_set_choice_overlay(AdvhdRuntime *rt, int32_t enabled);
 int32_t advhd_is_dirty(AdvhdRuntime *rt);
 int32_t advhd_extract_asset(AdvhdRuntime *rt, const char *name_utf8, const char *dest_path_utf8);

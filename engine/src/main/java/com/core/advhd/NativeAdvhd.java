@@ -32,6 +32,9 @@ public final class NativeAdvhd {
     static native String choiceText(long handle, int index);
     static native int choiceId(long handle, int index);
     static native int choose(long handle, int index);
+    /** Lua UI pointer input (UI-space coords after bridge letterbox inverse).
+     * action 0=move 1=press 2=release; returns the hit chroma part (0=none). */
+    static native int pointer(long handle, float x, float y, int action);
 
     static native String eventText(long handle);
     static native String eventName(long handle);
