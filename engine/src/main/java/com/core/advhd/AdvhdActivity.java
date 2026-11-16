@@ -796,7 +796,8 @@ public final class AdvhdActivity extends AppCompatActivity
                         text(R.string.engine_advhd_lua_probe),
                         text(R.string.engine_exit_game),
                 },
-                new Runnable[]{() -> {}, this::toggleAuto, this::saveSlot, this::loadSlot,
+                new Runnable[]{() -> {}, this::toggleAuto, () -> showSlotPicker(true),
+                        () -> showSlotPicker(false),
                         this::showBacklog, () -> probeLua("openTitle()"),
                         this::showExitConfirmation},
                 () -> {});
@@ -898,22 +899,73 @@ public final class AdvhdActivity extends AppCompatActivity
                 new String[]{text(R.string.engine_cancel)}, new Runnable[]{() -> {}}, () -> {});
     }
 
-    private File slotFile() {
-        return new File(payload.user, "slot1.json");
+    private static final int SLOT_COUNT = 8;
+
+    private File slotFile(int n) {
+        return new File(payload.user, "slot" + n + ".json");
     }
 
-    private void saveSlot() {
+    /** Slot picker for the menu save/load entries. Saving writes the current
+     * frame next to the slot JSON (slotN.png) for the app-side save manager. */
+    private void showSlotPicker(boolean saving) {
+        if (handle == 0 || destroyed || dialog != null) return;
+        java.util.ArrayList<Integer> ids = new java.util.ArrayList<>();
+        java.util.ArrayList<String> labels = new java.util.ArrayList<>();
+        java.text.DateFormat date = android.text.format.DateFormat.getDateFormat(this);
+        java.text.DateFormat time = android.text.format.DateFormat.getTimeFormat(this);
+        for (int n = 1; n <= SLOT_COUNT; n++) {
+            File f = slotFile(n);
+            if (f.isFile()) {
+                labels.add(getString(R.string.engine_advhd_slot_used, n,
+                        date.format(f.lastModified()) + " " + time.format(f.lastModified())));
+                ids.add(n);
+            } else if (saving) {
+                labels.add(getString(R.string.engine_advhd_slot_empty, n));
+                ids.add(n);
+            }
+        }
+        if (ids.isEmpty()) {
+            Toast.makeText(this, R.string.engine_advhd_no_saves, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String title = text(saving ? R.string.engine_advhd_save : R.string.engine_advhd_load);
+        showDialog(title, "", labels.toArray(new String[0]),
+                ids.stream().map(n -> (Runnable) () -> {
+                    if (saving) saveSlot(n);
+                    else loadSlot(n);
+                }).toArray(Runnable[]::new), () -> {});
+    }
+
+    private void saveSlot(int n) {
         engine.execute(() -> {
-            int result = NativeAdvhd.save(handle, slotFile().getAbsolutePath());
+            int result = NativeAdvhd.save(handle, slotFile(n).getAbsolutePath());
+            if (result == 0) writeThumbnail(n);
             ui.post(() -> Toast.makeText(this,
                     result == 0 ? R.string.engine_advhd_saved : R.string.engine_advhd_save_failed,
                     Toast.LENGTH_SHORT).show());
         });
     }
 
-    private void loadSlot() {
+    /** Dump the current frame as slotN.png (thumbnail for the save manager). */
+    private void writeThumbnail(int n) {
+        int[] argb = NativeAdvhd.renderFrame(handle);
+        if (argb == null) return;
+        int w = NativeAdvhd.nativeWidth();
+        int h = NativeAdvhd.nativeHeight();
+        android.graphics.Bitmap bmp = android.graphics.Bitmap.createBitmap(
+                w, h, android.graphics.Bitmap.Config.ARGB_8888);
+        bmp.setPixels(argb, 0, w, 0, 0, w, h);
+        try (java.io.FileOutputStream fos =
+                     new java.io.FileOutputStream(new File(payload.user, "slot" + n + ".png"))) {
+            bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, fos);
+        } catch (java.io.IOException ignored) {
+        }
+        bmp.recycle();
+    }
+
+    private void loadSlot(int n) {
         engine.execute(() -> {
-            int result = NativeAdvhd.load(handle, slotFile().getAbsolutePath());
+            int result = NativeAdvhd.load(handle, slotFile(n).getAbsolutePath());
             if (result != 0) {
                 String error = NativeAdvhd.lastError(handle);
                 ui.post(() -> Toast.makeText(this,

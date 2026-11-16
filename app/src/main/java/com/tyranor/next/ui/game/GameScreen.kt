@@ -2735,7 +2735,6 @@ internal fun shouldShowSaveManagement(engine: EngineType, sdkInt: Int = Build.VE
         (!engine.isManual &&
             engine != EngineType.RUNTIME_MODULE &&
             engine != EngineType.UNKNOWN &&
-            engine != EngineType.ADVHD &&
             (engine != EngineType.ETHORNELL ||
                 com.tyranor.next.core.game.save.EthornellSaveCapability.available) &&
             !ExternalEngineModuleRegistry.isExternalEngine(engine) &&

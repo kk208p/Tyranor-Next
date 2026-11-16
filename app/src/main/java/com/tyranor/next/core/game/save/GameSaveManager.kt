@@ -412,12 +412,17 @@ class GameSaveManager(private val context: Context) {
                     )
                 }
             }
-            // AdvHD v1 使用引擎内菜单的私有 JSON 槽位，未接入 TYN 存档管理
-            EngineType.ADVHD -> SaveLocation(
-                null,
-                R.string.save_location_unknown_unsupported,
-                false,
-            )
+            // AdvHD：引擎私有用户目录（files/advhd/userdata/<sha256>），槽位 JSON +
+            // 缩略图 PNG 由宿主写在这里，接入统一存档管理（CMVS scoped 同型）。
+            EngineType.ADVHD -> {
+                val directory = com.tyranor.next.core.game.model.AdvhdPaths
+                    .userDataDir(appContext.filesDir, game.uri)
+                SaveLocation(
+                    directory,
+                    R.string.save_location_engine_scoped,
+                    directory.isDirectory || directory.mkdirs(),
+                )
+            }
             // YU-RIS：存档固定在游戏目录 save/（经 Winlator 运行但落盘在游戏目录，可纳入统一存档管理）
             EngineType.YURIS -> SaveLocation(
                 File(root, "save"),
@@ -875,6 +880,20 @@ class GameSaveManager(private val context: Context) {
                 throw cancelled
             } catch (_: IOException) {
                 // Best effort: private CMVS tree only.
+            } catch (_: SecurityException) {
+            }
+            return
+        }
+        if (game.engine == EngineType.ADVHD) {
+            try {
+                deleteSaveDirectory(
+                    com.tyranor.next.core.game.model.AdvhdPaths.userDataDir(appContext.filesDir, game.uri),
+                    excludeFor(EngineType.ADVHD),
+                )
+            } catch (cancelled: kotlinx.coroutines.CancellationException) {
+                throw cancelled
+            } catch (_: IOException) {
+                // Best effort: private AdvHD tree only.
             } catch (_: SecurityException) {
             }
             return
@@ -1340,7 +1359,7 @@ class GameSaveManager(private val context: Context) {
             EngineType.KIRIKIRI, EngineType.ONS, EngineType.TYRANO, EngineType.RPG_MV, EngineType.RPG_MZ,
             EngineType.ARTEMIS, EngineType.SIGLUS, EngineType.REALLIVE, EngineType.AVG32, EngineType.UK2,
             EngineType.FVP, EngineType.XSYS35, EngineType.XSYS4, EngineType.YURIS, EngineType.ETHORNELL,
-            EngineType.CMVS, EngineType.SYSTEMNNN -> true
+            EngineType.CMVS, EngineType.SYSTEMNNN, EngineType.ADVHD -> true
             else -> false
         }
 

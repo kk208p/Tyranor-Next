@@ -52,6 +52,9 @@ public final class NativeAdvhd {
     static native void setSurface(long handle, Surface surface);
     static native void clearSurface(long handle);
     static native int frame(long handle);
+    /** Current frame as ARGB color ints (w*nativeHeight()), null on failure;
+     * for slot thumbnails (save-slot picker / save management). */
+    static native int[] renderFrame(long handle);
 
     static native int nativeWidth();
     static native int nativeHeight();

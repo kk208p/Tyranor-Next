@@ -390,6 +390,29 @@ void clearSurface(JNIEnv*, jclass, jlong token) {
     s->window = nullptr;
 }
 
+// Render the current frame into an Android color int array (ARGB, alpha
+// forced opaque — the canvas is composed opaque) for slot thumbnails.
+jintArray renderFrame(JNIEnv* env, jclass, jlong token) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (!s) return nullptr;
+    const uint32_t w = api_frame_width();
+    const uint32_t h = api_frame_height();
+    const size_t stride = static_cast<size_t>(w) * 4;
+    if (s->pixels.size() != stride * h) s->pixels.resize(stride * h);
+    if (api_frame(s->rt, s->pixels.data(), w, h, static_cast<uint32_t>(stride)) != 0) return nullptr;
+    const size_t count = static_cast<size_t>(w) * h;
+    std::vector<jint> colors(count);
+    for (size_t i = 0; i < count; ++i) {
+        const uint8_t* px = &s->pixels[i * 4];
+        colors[i] = static_cast<jint>((0xFFu << 24) | (px[0] << 16) | (px[1] << 8) | px[2]);
+    }
+    jintArray out = env->NewIntArray(static_cast<jsize>(count));
+    if (out == nullptr) return nullptr;
+    env->SetIntArrayRegion(out, 0, static_cast<jsize>(count), colors.data());
+    return out;
+}
+
 jint frame(JNIEnv*, jclass, jlong token) {
     std::lock_guard<std::mutex> guard(mutex);
     Session* s = session(token);
@@ -475,6 +498,7 @@ JNINativeMethod methods[] = {
     {"setSurface", "(JLandroid/view/Surface;)V", reinterpret_cast<void*>(setSurface)},
     {"clearSurface", "(J)V", reinterpret_cast<void*>(clearSurface)},
     {"frame", "(J)I", reinterpret_cast<void*>(frame)},
+    {"renderFrame", "(J)[I", reinterpret_cast<void*>(renderFrame)},
     {"nativeWidth", "()I", reinterpret_cast<void*>(nativeWidth)},
     {"nativeHeight", "()I", reinterpret_cast<void*>(nativeHeight)},
 };

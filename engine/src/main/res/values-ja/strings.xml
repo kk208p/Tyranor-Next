@@ -35,6 +35,9 @@
     <string name="engine_advhd_load">ロード</string>
     <string name="engine_advhd_saved">セーブしました</string>
     <string name="engine_advhd_save_failed">セーブに失敗しました</string>
+    <string name="engine_advhd_slot_used">スロット %1$d · %2$s</string>
+    <string name="engine_advhd_slot_empty">スロット %1$d（空）</string>
+    <string name="engine_advhd_no_saves">セーブデータがありません</string>
     <string name="engine_advhd_load_failed">ロードに失敗しました：%1$s</string>
     <string name="engine_advhd_exit_message">ゲームを終了しますか？未保存の進行は失われます。</string>
     <string name="engine_starting_game">ゲームを起動しています</string>

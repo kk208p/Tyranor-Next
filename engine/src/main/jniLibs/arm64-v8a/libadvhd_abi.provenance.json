@@ -3,13 +3,13 @@
   "abi_version": 2,
   "source": "https://github.com/kk208p/advhd-rs",
   "license": "GPL-2.0-or-later",
-  "commit": "846f17b8f2830140d37c1fb69ae5939ae2ee38b2",
+  "commit": "b7bf61f07b81eb79e6a99ec210afa293091df8f4",
   "target": "aarch64-linux-android",
   "min_sdk": 26,
   "ndk": "28.0.13004108",
   "rustc": "1.99.1",
-  "built": "2026-11-14",
-  "sha256": "8388e82a11c2c86b51882a7c17d0407112375f981f0e9f55fc96a72fcba62972",
+  "built": "2026-11-17",
+  "sha256": "512a24ba2d42e8d2835fcbc09837354525e555e57c73dd8de26e006d6f973836",
   "dependencies": "pure Rust (std + lewton + fontdue + encoding_rs); no libc++_shared",
   "notes": "M2-c part3: natural title boot chain (goto mainmenu real script, flag127 boot default, engine_ui_n) + menu lifecycle consumer (menu_active/UNPAUSED, var99 MENU SELECT) + lua_AutoCursor.GetCursorPos fix (EndJob gate) + clearHitTestAll + generic cfunc fallback. Prior notes: Lua UI generation variant (lua53: 168/177/125/48 series; mlua vendored). M2-c part2: menu interaction natives (advhd_pointer + chroma hit-test, getCursorPos, startTransition/isTransition engine-side state, setSubLayerParam COLOR/POS/SCALE store, sub-layer scale-pulse effects, cfunc GetGameState/SetVariable/NeedProcess bridge, __advhd_frame/__advhd_pointer driver chunk: per-frame menu pump + pointer dispatch). Plus prior: native UI subset (title renders on device), instrumented UI host (advhd_lua_trace/lua_probe), typewriter + auto timers, bc normalizer, translation overlay + 5 encodings, movie events, PNA 0x39 drawable-index + descending, current-line save, choice overlay, masks, fast arg-table scan"
 }
