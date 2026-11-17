@@ -82,6 +82,9 @@ void advhd_set_skip(AdvhdRuntime *rt, int32_t mode);
 
 /* Diagnostic getter for the current skip mode. */
 int32_t advhd_get_skip(AdvhdRuntime *rt);
+
+/* Diagnostic: 1 when the renderer has a usable font. */
+int32_t advhd_font_ok(AdvhdRuntime *rt);
 /* Lua UI instrumented trace (Lua-enabled .so variants; -1 when inactive). */
 int32_t advhd_lua_trace(AdvhdRuntime *rt, char *buf, int32_t cap);
 /* Lua UI probe: boot the host (idempotent), evaluate code, return trace

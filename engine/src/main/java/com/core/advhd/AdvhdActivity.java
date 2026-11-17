@@ -162,6 +162,8 @@ public final class AdvhdActivity extends AppCompatActivity
             finish();
             return;
         }
+        android.util.Log.i("AdvhdHost", "payload entry='" + payload.entry + "' nls=" + payload.nls
+                + " root=" + payload.root + " font='" + payload.font + "'");
         File userDir = new File(payload.user);
         if (!userDir.isDirectory() && !userDir.mkdirs()) {
             toast(R.string.engine_advhd_user_dir_failed);
@@ -285,7 +287,8 @@ public final class AdvhdActivity extends AppCompatActivity
                 }
             });
         }
-        android.util.Log.i("AdvhdHost", "create ms=" + ((System.nanoTime() - startedAt) / 1_000_000));
+        android.util.Log.i("AdvhdHost", "create ms=" + ((System.nanoTime() - startedAt) / 1_000_000)
+                + " fontOk=" + NativeAdvhd.fontOk(handle));
         ui.post(() -> {
             if (destroyed) return;
             if (surfaceReady) attachSurface();
