@@ -30,7 +30,7 @@ uint64_t nextToken = 1;
     X(advance) X(poll_event) X(choose) X(choice_count) X(choice_text) \
     X(choice_id) X(event_text) X(event_name) X(event_voice) X(last_error) \
     X(message_visible) X(history_count) X(history_text) X(frame) X(extract_asset) \
-    X(save) X(load) X(is_dirty) X(invalidate) X(pointer) X(set_choice_overlay)
+    X(save) X(load) X(is_dirty) X(invalidate) X(pointer) X(set_choice_overlay) X(set_skip) X(get_skip)
 
 #define DECLARE(name) decltype(&advhd_##name) api_##name = nullptr;
 ADVHD_API_LIST(DECLARE)
@@ -390,6 +390,18 @@ void clearSurface(JNIEnv*, jclass, jlong token) {
     s->window = nullptr;
 }
 
+void setSkip(JNIEnv*, jclass, jlong token, jint mode) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    if (s) api_set_skip(s->rt, static_cast<int32_t>(mode));
+}
+
+jint getSkip(JNIEnv*, jclass, jlong token) {
+    std::lock_guard<std::mutex> guard(mutex);
+    Session* s = session(token);
+    return s ? api_get_skip(s->rt) : 0;
+}
+
 // Render the current frame into an Android color int array (ARGB, alpha
 // forced opaque — the canvas is composed opaque) for slot thumbnails.
 jintArray renderFrame(JNIEnv* env, jclass, jlong token) {
@@ -499,6 +511,8 @@ JNINativeMethod methods[] = {
     {"clearSurface", "(J)V", reinterpret_cast<void*>(clearSurface)},
     {"frame", "(J)I", reinterpret_cast<void*>(frame)},
     {"renderFrame", "(J)[I", reinterpret_cast<void*>(renderFrame)},
+    {"setSkip", "(JI)V", reinterpret_cast<void*>(setSkip)},
+    {"getSkip", "(J)I", reinterpret_cast<void*>(getSkip)},
     {"nativeWidth", "()I", reinterpret_cast<void*>(nativeWidth)},
     {"nativeHeight", "()I", reinterpret_cast<void*>(nativeHeight)},
 };

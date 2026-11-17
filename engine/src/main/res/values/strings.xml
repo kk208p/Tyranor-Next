@@ -38,6 +38,8 @@
     <string name="engine_advhd_slot_used">槽 %1$d · %2$s</string>
     <string name="engine_advhd_slot_empty">槽 %1$d（空）</string>
     <string name="engine_advhd_no_saves">暂无存档</string>
+    <string name="engine_advhd_skip_on">快进开启（长按屏幕也可）</string>
+    <string name="engine_advhd_skip_off">快进关闭</string>
     <string name="engine_advhd_load_failed">读档失败：%1$s</string>
     <string name="engine_advhd_exit_message">退出游戏？未保存的进度会丢失。</string>
     <string name="engine_starting_game">正在启动游戏</string>

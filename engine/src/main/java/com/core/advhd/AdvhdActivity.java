@@ -58,6 +58,7 @@ public final class AdvhdActivity extends AppCompatActivity
     private static final int EVENT_END = 6;
     private static final int EVENT_ERROR = 7;
     private static final int EVENT_MOVIE = 8;
+    private static final int EVENT_SKIPSTOP = 9;
     private static final int MOVIE_PLAY_WAIT = 1;
     private static final int MOVIE_PLAY = 2;
     private static final int MOVIE_STOP = 3;
@@ -91,6 +92,7 @@ public final class AdvhdActivity extends AppCompatActivity
     /** Last forwarded pointer position (MOVE throttle). */
     private float lastPointerX, lastPointerY;
     private boolean autoMode;
+    private boolean skipMode;
     /** Engine-thread frame counter: pump heartbeat + Lua trace cadence. */
     private long frameCount;
     private int lastTraceLen = -1;
@@ -353,6 +355,21 @@ public final class AdvhdActivity extends AppCompatActivity
         if (moviePlaying) return true;
         if (dialog != null || choicePending) return true;
         int a = event.getActionMasked();
+        // While hold-to-skip runs, swallow all pointer traffic (including the
+        // MOVE flood from a held finger) — only the release ends the skip.
+        if (holdSkipping) {
+            if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
+                ui.removeCallbacks(holdSkipRunnable);
+                stopHoldSkip();
+            }
+            return true;
+        }
+        if (a == MotionEvent.ACTION_DOWN) {
+            // Press-and-hold (>300 ms) fast-forwards until release; a quick
+            // tap still advances exactly one line below.
+            pressStartedAt = android.os.SystemClock.uptimeMillis();
+            ui.postDelayed(this::startHoldSkip, 300);
+        }
         if (handle != 0 && !destroyed
                 && (a == MotionEvent.ACTION_DOWN || a == MotionEvent.ACTION_MOVE
                         || a == MotionEvent.ACTION_UP)) {
@@ -370,10 +387,52 @@ public final class AdvhdActivity extends AppCompatActivity
                 engine.execute(() -> NativeAdvhd.pointer(handle, fx, fy, act));
             }
         }
-        if (a == MotionEvent.ACTION_UP) {
-            advanceOnce();
+        if (a == MotionEvent.ACTION_UP || a == MotionEvent.ACTION_CANCEL) {
+            ui.removeCallbacks(holdSkipRunnable);
+            stopHoldSkip();
+            if (a == MotionEvent.ACTION_UP) {
+                advanceOnce();
+            }
         }
         return true;
+    }
+
+    /** Hold-to-skip state: press >300 ms runs skip-all until release. */
+    private boolean holdSkipping;
+    private long pressStartedAt;
+
+    private final Runnable holdSkipRunnable = new Runnable() {
+        @Override public void run() {
+            if (destroyed || handle == 0) return;
+            long held = android.os.SystemClock.uptimeMillis() - pressStartedAt;
+            if (held < 300) return;
+            holdSkipping = true;
+            engine.execute(() -> {
+                NativeAdvhd.setSkip(handle, 2);
+                NativeAdvhd.setTextSpeed(handle, 400f);
+            });
+            Toast.makeText(AdvhdActivity.this, R.string.engine_advhd_skip_on,
+                    Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private void startHoldSkip() {
+        // Re-check: the press may have been released before the delay fired
+        // (the runnable is removed on UP, this guard covers races).
+        if (holdSkipping || pressStartedAt == 0) return;
+        holdSkipRunnable.run();
+    }
+
+    private void stopHoldSkip() {
+        pressStartedAt = 0;
+        if (!holdSkipping) return;
+        holdSkipping = false;
+        if (handle != 0 && !destroyed) {
+            engine.execute(() -> {
+                NativeAdvhd.setSkip(handle, 0);
+                NativeAdvhd.setTextSpeed(handle, 40f);
+            });
+        }
     }
 
     private void advanceOnce() {
@@ -417,6 +476,14 @@ public final class AdvhdActivity extends AppCompatActivity
                 break;
             case EVENT_UI:
                 logLuaTrace();
+                break;
+            case EVENT_SKIPSTOP:
+                // The script stopped the skip (SetStopSkip): reset both
+                // skip affordances so the line shows normally.
+                skipMode = false;
+                holdSkipping = false;
+                NativeAdvhd.setSkip(handle, 0);
+                Toast.makeText(this, R.string.engine_advhd_skip_off, Toast.LENGTH_SHORT).show();
                 break;
             case EVENT_MOVIE:
                 if (raw[1] == MOVIE_STOP) {
@@ -790,13 +857,16 @@ public final class AdvhdActivity extends AppCompatActivity
                         text(R.string.engine_advhd_resume),
                         autoMode ? text(R.string.engine_advhd_auto_off)
                                  : text(R.string.engine_advhd_auto_on),
+                        skipMode ? text(R.string.engine_advhd_skip_off)
+                                 : text(R.string.engine_advhd_skip_on),
                         text(R.string.engine_advhd_save),
                         text(R.string.engine_advhd_load),
                         text(R.string.engine_advhd_backlog),
                         text(R.string.engine_advhd_lua_probe),
                         text(R.string.engine_exit_game),
                 },
-                new Runnable[]{() -> {}, this::toggleAuto, () -> showSlotPicker(true),
+                new Runnable[]{() -> {}, this::toggleAuto, this::toggleSkip,
+                        () -> showSlotPicker(true),
                         () -> showSlotPicker(false),
                         this::showBacklog, () -> probeLua("openTitle()"),
                         this::showExitConfirmation},
@@ -809,6 +879,15 @@ public final class AdvhdActivity extends AppCompatActivity
         if (handle != 0) NativeAdvhd.setAuto(handle, autoMode ? 1 : 0, 1200);
         Toast.makeText(this, autoMode ? R.string.engine_advhd_auto_on
                                       : R.string.engine_advhd_auto_off,
+                Toast.LENGTH_SHORT).show();
+    }
+
+    /** Session-local skip-all (menu entry). Hold-to-skip uses the same flag. */
+    private void toggleSkip() {
+        skipMode = !skipMode;
+        if (handle != 0) NativeAdvhd.setSkip(handle, skipMode ? 2 : 0);
+        Toast.makeText(this, skipMode ? R.string.engine_advhd_skip_on
+                                      : R.string.engine_advhd_skip_off,
                 Toast.LENGTH_SHORT).show();
     }
 

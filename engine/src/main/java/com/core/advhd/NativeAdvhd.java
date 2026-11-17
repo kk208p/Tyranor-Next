@@ -19,6 +19,9 @@ public final class NativeAdvhd {
     static native int tick(long handle, int deltaMs);
     static native void setTextSpeed(long handle, float cps);
     static native void setAuto(long handle, int enabled, int delayMs);
+    /** Skip mode 0/1/2; EVENT_SKIPSTOP (=9) reports the script's own stop. */
+    static native void setSkip(long handle, int mode);
+    static native int getSkip(long handle);
     /** Instrumented Lua UI trace; "" when the runtime has no Lua session. */
     static native String luaTrace(long handle);
     /** Debug probe: boot the Lua host and evaluate a snippet. */

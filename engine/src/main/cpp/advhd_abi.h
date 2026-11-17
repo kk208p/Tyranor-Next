@@ -25,6 +25,8 @@ extern "C" {
 #define ADVHD_EVENT_END 6
 #define ADVHD_EVENT_ERROR 7
 #define ADVHD_EVENT_MOVIE 8
+/* The script forced a skip stop (SetStopSkip): the host must turn skip off. */
+#define ADVHD_EVENT_SKIPSTOP 9
 
 /* Movie codes carried in AdvhdEventV2.code. */
 #define ADVHD_MOVIE_PLAY_WAIT 1
@@ -72,6 +74,14 @@ int32_t advhd_load_translation(AdvhdRuntime *rt, const char *path_utf8);
 uint32_t advhd_tick(AdvhdRuntime *rt, uint32_t delta_ms);
 void advhd_set_text_speed(AdvhdRuntime *rt, float cps);
 void advhd_set_auto(AdvhdRuntime *rt, int32_t enabled, uint32_t delay_ms);
+
+/* Set skip mode (0 off, 1 skip-read, 2 skip-all). While on, tick() advances
+ * the script every frame at 8x waits; ADVHD_EVENT_SKIPSTOP reports the
+ * script's own stop request. */
+void advhd_set_skip(AdvhdRuntime *rt, int32_t mode);
+
+/* Diagnostic getter for the current skip mode. */
+int32_t advhd_get_skip(AdvhdRuntime *rt);
 /* Lua UI instrumented trace (Lua-enabled .so variants; -1 when inactive). */
 int32_t advhd_lua_trace(AdvhdRuntime *rt, char *buf, int32_t cap);
 /* Lua UI probe: boot the host (idempotent), evaluate code, return trace
